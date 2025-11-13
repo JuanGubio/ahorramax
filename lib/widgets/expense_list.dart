@@ -137,13 +137,23 @@ class ExpenseList extends StatelessWidget {
                               color: Colors.green.shade100,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Text(
-                              '💰 Ahorrado: \$${expense.amountSaved!.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                color: Colors.green.shade800,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.savings,
+                                  size: 12,
+                                  color: Colors.green.shade800,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Ahorrado: \$${expense.amountSaved!.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    color: Colors.green.shade800,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],

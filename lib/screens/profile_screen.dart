@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? toggleTheme;
@@ -37,6 +39,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // Cargar datos de SharedPreferences
     setState(() {
       _nameController.text = prefs.getString('user_name') ?? _user?.displayName ?? 'Usuario';
       _emailController.text = prefs.getString('user_email') ?? _user?.email ?? '';
@@ -45,6 +49,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _memberSince = prefs.getString('member_since') ?? 'Enero 2025';
       _profileImagePath = prefs.getString('profile_image');
     });
+
+    // Cargar foto de perfil desde Firestore si existe
+    if (_user != null) {
+      try {
+        final doc = await FirebaseFirestore.instance.collection('usuarios').doc(_user!.uid).get();
+        if (doc.exists && doc.data()!.containsKey('fotoPerfil')) {
+          final imageUrl = doc['fotoPerfil'] as String?;
+          if (imageUrl != null && imageUrl.isNotEmpty) {
+            // Guardar URL en SharedPreferences para acceso rápido
+            await prefs.setString('profile_image_url', imageUrl);
+            print("Foto de perfil cargada desde Firestore: $imageUrl");
+          }
+        }
+      } catch (e) {
+        print("Error al cargar foto de perfil: $e");
+      }
+    }
   }
 
   Future<void> _saveUserData() async {
@@ -59,11 +80,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _profileImagePath = image.path;
-      });
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        requestFullMetadata: false,
+      );
+
+      if (image != null) {
+        print("Imagen seleccionada: ${image.path}");
+
+        // Para Web, no recortamos, solo subimos directamente
+        // Subir imagen a Firebase Storage
+        final file = File(image.path);
+        final uid = _auth.currentUser!.uid;
+        final ref = FirebaseStorage.instance.ref().child('usuarios/$uid/perfil/perfil.jpg');
+
+        print("Subiendo imagen de perfil a Firebase Storage...");
+        await ref.putFile(file);
+        final imageUrl = await ref.getDownloadURL();
+
+        // Guardar URL en Firestore
+        await FirebaseFirestore.instance.collection('usuarios').doc(uid).update({
+          'fotoPerfil': imageUrl,
+        });
+
+        setState(() {
+          _profileImagePath = image.path; // Para mostrar localmente
+        });
+
+        // Guardar en SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('profile_image_url', imageUrl);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Foto de perfil actualizada')),
+          );
+        }
+
+        print("Imagen de perfil subida correctamente: $imageUrl");
+      }
+    } catch (e) {
+      print("Error al subir imagen de perfil: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al actualizar foto: $e')),
+        );
+      }
     }
   }
 
@@ -72,6 +136,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       await _user?.updateDisplayName(_nameController.text);
       await _saveUserData();
+
+      // Actualizar datos en Firestore
+      if (_user != null) {
+        await FirebaseFirestore.instance.collection('usuarios').doc(_user!.uid).update({
+          'nombre': _nameController.text,
+          'email': _emailController.text,
+          'telefono': _phoneController.text,
+          'ubicacion': _locationController.text,
+        });
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Perfil actualizado exitosamente')),
@@ -86,6 +161,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } finally {
       setState(() => isLoading = false);
     }
+  }
+
+  Widget _buildProfileImage() {
+    // Primero intentar cargar desde SharedPreferences (URL de Firebase)
+    final prefs = SharedPreferences.getInstance();
+    return FutureBuilder<SharedPreferences>(
+      future: prefs,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          final profileImageUrl = snapshot.data!.getString('profile_image_url');
+          if (profileImageUrl != null && profileImageUrl.isNotEmpty) {
+            return ClipOval(
+              child: Image.network(
+                profileImageUrl,
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // Si falla la URL de Firebase, mostrar imagen local o ícono
+                  return _profileImagePath != null
+                      ? ClipOval(
+                          child: Image.network(
+                            _profileImagePath!,
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => const Icon(
+                              Icons.person,
+                              size: 60,
+                              color: Colors.white,
+                            ),
+                          ),
+                        )
+                      : const Icon(
+                          Icons.person,
+                          size: 60,
+                          color: Colors.white,
+                        );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    color: Colors.white.withOpacity(0.3),
+                    child: const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    ),
+                  );
+                },
+              ),
+            );
+          }
+        }
+
+        // Si no hay URL de Firebase, mostrar imagen local o ícono
+        return _profileImagePath != null
+            ? ClipOval(
+                child: Image.network(
+                  _profileImagePath!,
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.person,
+                    size: 60,
+                    color: Colors.white,
+                  ),
+                ),
+              )
+            : const Icon(
+                Icons.person,
+                size: 60,
+                color: Colors.white,
+              );
+      },
+    );
   }
 
   Future<void> _signOut() async {
@@ -363,20 +513,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ],
                             ),
-                            child: _profileImagePath != null
-                                ? ClipOval(
-                                    child: Image.file(
-                                      File(_profileImagePath!),
-                                      width: 100,
-                                      height: 100,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.person,
-                                    size: 60,
-                                    color: Colors.white,
-                                  ),
+                            child: _buildProfileImage(),
                           ),
 
                           // Botón de cambiar foto

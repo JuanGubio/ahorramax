@@ -195,7 +195,7 @@ class _StreakTrackerState extends State<StreakTracker> with TickerProviderStateM
                   const SizedBox(height: 8),
                   Text(
                     _trackedToday
-                        ? '¡Ya registraste hoy! 🔥'
+                        ? '¡Ya registraste hoy!'
                         : '¿Registraste algún gasto o ingreso hoy?',
                     style: TextStyle(
                       fontSize: 14,

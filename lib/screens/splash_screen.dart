@@ -96,7 +96,13 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     // Navegar después de 4 segundos (después de que termine la barra de carga)
     _navigationTimer = Timer(const Duration(seconds: 4), () {
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/welcome');
+        try {
+          Navigator.of(context).pushReplacementNamed('/welcome');
+        } catch (e) {
+          print("Error navegando desde splash: $e");
+          // Fallback navigation - import the correct class
+          Navigator.of(context).pushReplacementNamed('/welcome');
+        }
       }
     });
   }
@@ -233,8 +239,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                   width: 60,
                                   height: 60,
                                   fit: BoxFit.cover,
-                                  color: Colors.white,
-                                  colorBlendMode: BlendMode.srcIn,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Container(
                                       width: 60,

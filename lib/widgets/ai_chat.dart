@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 
 class AIChat extends StatefulWidget {
   final String initialCategory;
@@ -16,6 +17,10 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
   bool _isTyping = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  late GenerativeModel _model;
+
+  // API Key de Gemini
+  static const String _apiKey = 'AIzaSyDm3AmOpLTs3l99DG2p3otfQqKOIb0e-Uc';
 
   @override
   void initState() {
@@ -27,8 +32,14 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
     _animationController.forward();
 
+    // Inicializar modelo de Gemini
+    _model = GenerativeModel(
+      model: 'gemini-1.5-flash',
+      apiKey: _apiKey,
+    );
+
     // Mensaje de bienvenida
-    _addBotMessage('¡Hola! Soy tu asistente financiero IA. ¿En qué puedo ayudarte hoy? 💰');
+    _addBotMessage('¡Hola! Soy Gemini AI, tu asistente financiero inteligente. ¿En qué puedo ayudarte hoy?');
   }
 
   @override
@@ -73,7 +84,7 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
     });
   }
 
-  void _sendMessage() {
+  void _sendMessage() async {
     final message = _messageController.text.trim();
     if (message.isEmpty) return;
 
@@ -82,31 +93,60 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
 
     setState(() => _isTyping = true);
 
-    // Simular respuesta de IA
-    Future.delayed(const Duration(seconds: 1), () {
+    try {
+      final response = await _getGeminiResponse(message);
       setState(() => _isTyping = false);
-      _addBotMessage(_generateResponse(message));
-    });
+      _addBotMessage(response);
+    } catch (e) {
+      setState(() => _isTyping = false);
+      _addBotMessage('Lo siento, tuve un problema conectándome con la IA. ¿Puedes intentar de nuevo?');
+      print('Error en chat IA: $e');
+    }
   }
 
-  String _generateResponse(String userMessage) {
+  Future<String> _getGeminiResponse(String userMessage) async {
+    try {
+      // Usar modelo correcto de Gemini
+      final prompt = '''
+Eres Gemini AI, el asistente de IA más avanzado de Google integrado en AhorraMax.
+
+Usuario: "$userMessage"
+
+Responde de manera inteligente, útil y enfocada en finanzas personales. Menciona ofertas locales cuando sea relevante.
+''';
+
+      final content = [Content.text(prompt)];
+      final response = await _model.generateContent(content);
+
+      if (response.text != null && response.text!.isNotEmpty) {
+        return response.text!.trim();
+      } else {
+        return _generateFallbackResponse(userMessage);
+      }
+    } catch (e) {
+      print('Error al conectar con Gemini API: $e');
+      return _generateFallbackResponse(userMessage);
+    }
+  }
+
+  String _generateFallbackResponse(String userMessage) {
     final message = userMessage.toLowerCase();
 
     // Respuestas basadas en categorías
     if (message.contains('comida') || message.contains('restaurante') || message.contains('pizza')) {
-      return '🍕 ¡Buena elección! Te recomiendo revisar las ofertas de Pizza Hut hoy - tienen 2x1 en pizzas medianas. También puedes cocinar en casa para ahorrar más. ¿Te ayudo con alguna receta económica?';
+      return '¡Buena elección! Te recomiendo revisar las ofertas de Pizza Hut hoy - tienen 2x1 en pizzas medianas. También puedes cocinar en casa para ahorrar más. ¿Te ayudo con alguna receta económica?';
     }
 
     if (message.contains('transporte') || message.contains('bus') || message.contains('taxi')) {
-      return '🚌 Para transporte, considera usar la tarjeta Ecovía - tiene descuentos. Si vas a lugares cercanos, ¡la bicicleta es gratis y saludable! ¿A dónde necesitas ir?';
+      return 'Para transporte, considera usar la tarjeta Ecovía - tiene descuentos. Si vas a lugares cercanos, ¡la bicicleta es gratis y saludable! ¿A dónde necesitas ir?';
     }
 
     if (message.contains('supermercado') || message.contains('compras') || message.contains('tienda')) {
-      return '🛒 Mi Comisariato tiene 30% descuento en lácteos esta semana. Tía ofrece productos de limpieza con 20% off. ¿Qué necesitas comprar?';
+      return 'Mi Comisariato tiene 30% descuento en lácteos esta semana. Tía ofrece productos de limpieza con 20% off. ¿Qué necesitas comprar?';
     }
 
     if (message.contains('ahorro') || message.contains('dinero') || message.contains('presupuesto')) {
-      return '💡 Excelente pregunta sobre ahorro. Te sugiero: 1) Establece un presupuesto semanal, 2) Revisa ofertas antes de comprar, 3) Cocina en casa. ¿Quieres que analice tus gastos recientes?';
+      return 'Excelente pregunta sobre ahorro. Te sugiero: 1) Establece un presupuesto semanal, 2) Revisa ofertas antes de comprar, 3) Cocina en casa. ¿Quieres que analice tus gastos recientes?';
     }
 
     if (message.contains('gasto') || message.contains('cuánto') || message.contains('precio')) {
@@ -118,7 +158,7 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
     }
 
     if (message.contains('hola') || message.contains('hi') || message.contains('buenos')) {
-      return '¡Hola! 👋 Soy tu asistente financiero personal. Puedo ayudarte con recomendaciones de ahorro, ofertas locales, análisis de gastos y mucho más. ¿Qué necesitas?';
+      return '¡Hola! 👋 Soy Gemini AI, el asistente de IA de Google integrado en AhorraMax. Estoy aquí para ayudarte con tus finanzas, recomendaciones de ahorro y ofertas locales. ¿En qué puedo asistirte hoy?';
     }
 
     if (message.contains('gracias') || message.contains('thank')) {
@@ -128,9 +168,9 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
     // Respuestas genéricas
     final genericResponses = [
       '¡Excelente pregunta! Déjame pensar en la mejor manera de ayudarte con eso. 💭',
-      'Entiendo tu consulta. Basándome en patrones similares, te recomiendo revisar las ofertas locales primero. 🛍️',
-      'Buena observación. El ahorro inteligente viene de pequeñas decisiones diarias. ¿Quieres que te dé tips específicos? 💡',
-      'Interesante. Puedo analizar tus hábitos de gasto para darte recomendaciones más personalizadas. 📊',
+      'Entiendo tu consulta. Basándome en patrones similares, te recomiendo revisar las ofertas locales primero.',
+      'Buena observación. El ahorro inteligente viene de pequeñas decisiones diarias. ¿Quieres que te dé tips específicos?',
+      'Interesante. Puedo analizar tus hábitos de gasto para darte recomendaciones más personalizadas.',
     ];
 
     return genericResponses[DateTime.now().millisecondsSinceEpoch % genericResponses.length];
@@ -183,10 +223,9 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Icon(
-                          Icons.smart_toy,
-                          color: Colors.white,
-                          size: 20,
+                        child: const Text(
+                          '🤖',
+                          style: TextStyle(fontSize: 20),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -195,7 +234,7 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Asistente IA',
+                              'Gemini AI',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -203,7 +242,7 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
                               ),
                             ),
                             Text(
-                              'Tu guía financiera',
+                              'IA de Google',
                               style: TextStyle(
                                 color: Colors.white70,
                                 fontSize: 12,
@@ -213,7 +252,10 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
                         ),
                       ),
                       IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () {
+                          // Solo cerrar el chat, no navegar
+                          Navigator.of(context).pop();
+                        },
                         icon: const Icon(Icons.close, color: Colors.white),
                         style: IconButton.styleFrom(
                           backgroundColor: Colors.white.withOpacity(0.2),
@@ -241,57 +283,57 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
                 ),
 
                 // Input
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(20),
-                      bottomRight: Radius.circular(20),
-                    ),
+                Material(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20),
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _messageController,
-                          decoration: InputDecoration(
-                            hintText: 'Pregunta sobre finanzas...',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(25),
-                              borderSide: BorderSide.none,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _messageController,
+                            decoration: InputDecoration(
+                              hintText: 'Pregunta sobre finanzas...',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(25),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey.shade100,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
                             ),
-                            filled: true,
-                            fillColor: Colors.grey.shade100,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
+                            onSubmitted: (_) => _sendMessage(),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Theme.of(context).primaryColor,
+                                Theme.of(context).primaryColor.withOpacity(0.8),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          child: IconButton(
+                            onPressed: _sendMessage,
+                            icon: const Icon(Icons.send, color: Colors.white),
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              padding: const EdgeInsets.all(12),
                             ),
                           ),
-                          onSubmitted: (_) => _sendMessage(),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Theme.of(context).primaryColor,
-                              Theme.of(context).primaryColor.withOpacity(0.8),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(25),
-                        ),
-                        child: IconButton(
-                          onPressed: _sendMessage,
-                          icon: const Icon(Icons.send, color: Colors.white),
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            padding: const EdgeInsets.all(12),
-                          ),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],

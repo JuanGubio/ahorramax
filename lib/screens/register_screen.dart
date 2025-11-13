@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -28,6 +29,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return 'U';
   }
 
+  Future<void> registrarUsuario(String nombre, String email, String password) async {
+    try {
+      // 1. Crear cuenta en Firebase Authentication
+      UserCredential cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // 2. Obtener el UID único del usuario
+      String uid = cred.user!.uid;
+
+      // 3. Crear documento en la colección "usuarios" con los campos iniciales
+      await FirebaseFirestore.instance.collection('usuarios').doc(uid).set({
+        "nombre": nombre,
+        "email": email,
+        "idioma": "es",
+        "temaColor": "verde",
+        "notificacionesActivas": true,
+        "frecuenciaNotificaciones": 8,
+        "rachaAhorros": true,
+        "recordatorios": true,
+        "balanceActual": 250,
+        "ahorroTotal": 120,
+        "metaPrincipal": 500,
+        "imagenPerfil": "https://mi-imagen.com/foto.png",
+        "fechaRegistro": DateTime.now(),
+      });
+
+      print("Usuario registrado y datos creados correctamente");
+
+    } catch (e) {
+      print("Error al registrar usuario: $e");
+    }
+  }
+
   Future<void> register() async {
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -51,17 +87,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => isLoading = true);
     try {
-      final userCredential = await _auth.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      await registrarUsuario(
+        _nameController.text.trim(),
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
-
-      // Update display name
-      await userCredential.user?.updateDisplayName(_nameController.text.trim());
-
-      // Update photo URL with initials avatar
-      final initials = _getInitials(_nameController.text.trim());
-      await userCredential.user?.updatePhotoURL('https://ui-avatars.com/api/?name=$initials&background=2ECC71&color=FFFFFF&size=128');
 
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/');

@@ -23,7 +23,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> with TickerProviderSt
       'position': 'center',
     },
     {
-      'title': 'Tu Balance Actual 💰',
+      'title': 'Tu Balance Actual',
       'description': 'Aquí verás todo tu dinero disponible. Puedes agregar más haciendo clic en el botón +.',
       'target': 'balance-section',
       'position': 'top',
@@ -35,7 +35,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> with TickerProviderSt
       'position': 'top',
     },
     {
-      'title': 'Agregar Gasto 💸',
+      'title': 'Agregar Gasto',
       'description': 'Registra tus gastos aquí. Categorízalos correctamente para mejores recomendaciones.',
       'target': 'add-expense-form',
       'position': 'bottom',
