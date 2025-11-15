@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models.dart';
 
-class ExpenseList extends StatelessWidget {
-  final List<Expense> expenses;
-  final Function(int) onDeleteExpense;
+class IncomeList extends StatelessWidget {
+  final List<Income> incomes;
+  final Function(int) onDeleteIncome;
 
-  const ExpenseList({
+  const IncomeList({
     super.key,
-    required this.expenses,
-    required this.onDeleteExpense,
+    required this.incomes,
+    required this.onDeleteIncome,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (expenses.isEmpty) {
+    if (incomes.isEmpty) {
       return Card(
         elevation: 4,
         shape: RoundedRectangleBorder(
@@ -24,7 +24,7 @@ class ExpenseList extends StatelessWidget {
           padding: EdgeInsets.all(24),
           child: Center(
             child: Text(
-              'No hay gastos registrados',
+              'No hay ingresos registrados',
               style: TextStyle(color: Colors.grey, fontSize: 16),
             ),
           ),
@@ -32,8 +32,8 @@ class ExpenseList extends StatelessWidget {
       );
     }
 
-    // Ordenar gastos por fecha (más recientes primero)
-    final sortedExpenses = List<Expense>.from(expenses)
+    // Ordenar ingresos por fecha (más recientes primero)
+    final sortedIncomes = List<Income>.from(incomes)
       ..sort((a, b) => b.date.compareTo(a.date));
 
     return Card(
@@ -48,10 +48,10 @@ class ExpenseList extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.receipt_long, color: Theme.of(context).primaryColor, size: 24),
+                Icon(Icons.trending_up, color: Colors.green.shade600, size: 24),
                 const SizedBox(width: 8),
                 const Text(
-                  'Lista de Gastos',
+                  'Lista de Ingresos',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -60,9 +60,9 @@ class ExpenseList extends StatelessWidget {
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: sortedExpenses.length,
+              itemCount: sortedIncomes.length,
               itemBuilder: (context, index) {
-                final expense = sortedExpenses[index];
+                final income = sortedIncomes[index];
                 return Card(
                   elevation: 2,
                   margin: const EdgeInsets.only(bottom: 12),
@@ -75,17 +75,17 @@ class ExpenseList extends StatelessWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: _getCategoryColor(expense.category).withOpacity(0.2),
+                        color: _getSourceColor(income.source).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
-                        _getCategoryIcon(expense.category),
-                        color: _getCategoryColor(expense.category),
+                        _getSourceIcon(income.source),
+                        color: _getSourceColor(income.source),
                         size: 24,
                       ),
                     ),
                     title: Text(
-                      expense.description,
+                      income.description,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -96,78 +96,31 @@ class ExpenseList extends StatelessWidget {
                       children: [
                         const SizedBox(height: 4),
                         Text(
-                          expense.category,
+                          income.source,
                           style: TextStyle(
-                            color: Theme.of(context).primaryColor,
+                            color: Colors.green.shade600,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          DateFormat('dd/MM/yyyy HH:mm').format(expense.date),
+                          DateFormat('dd/MM/yyyy HH:mm').format(income.date),
                           style: const TextStyle(
                             color: Colors.grey,
                             fontSize: 12,
                           ),
                         ),
-                        if (expense.location != null && expense.location!.isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              const Icon(Icons.location_on, size: 12, color: Colors.grey),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  expense.location!,
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                        if (expense.amountSaved != null && expense.amountSaved! > 0) ...[
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade100,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.savings,
-                                  size: 12,
-                                  color: Colors.green.shade800,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Ahorrado: \$${expense.amountSaved!.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    color: Colors.green.shade800,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '\$${expense.amount.toStringAsFixed(2)}',
+                          '+\$${income.amount.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Colors.red,
+                            color: Colors.green,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -191,25 +144,25 @@ class ExpenseList extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                color: Colors.green.shade50,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Total de Gastos:',
+                    'Total de Ingresos:',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
-                    '\$${expenses.fold<double>(0, (sum, expense) => sum + expense.amount).toStringAsFixed(2)}',
+                    '+\$${incomes.fold<double>(0, (sum, income) => sum + income.amount).toStringAsFixed(2)}',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.red,
+                      color: Colors.green,
                     ),
                   ),
                 ],
@@ -229,8 +182,8 @@ class ExpenseList extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text('Eliminar Gasto'),
-          content: const Text('¿Estás seguro de que quieres eliminar este gasto?'),
+          title: const Text('Eliminar Ingreso'),
+          content: const Text('¿Estás seguro de que quieres eliminar este ingreso?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -238,11 +191,11 @@ class ExpenseList extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                onDeleteExpense(index);
+                onDeleteIncome(index);
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Gasto eliminado correctamente'),
+                    content: Text('Ingreso eliminado correctamente'),
                     backgroundColor: Colors.green,
                   ),
                 );
@@ -259,22 +212,18 @@ class ExpenseList extends StatelessWidget {
     );
   }
 
-  Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'Restaurantes':
-        return Colors.red;
-      case 'Transporte':
+  Color _getSourceColor(String source) {
+    switch (source) {
+      case 'Salario':
         return Colors.blue;
-      case 'Entretenimiento':
-        return Colors.orange;
-      case 'Compras':
+      case 'Freelance':
         return Colors.purple;
-      case 'Servicios':
-        return Colors.teal;
-      case 'Salud':
+      case 'Inversiones':
         return Colors.green;
-      case 'Educación':
-        return Colors.indigo;
+      case 'Regalos':
+        return Colors.pink;
+      case 'Bonos':
+        return Colors.orange;
       case 'Otros':
         return Colors.grey;
       default:
@@ -282,26 +231,22 @@ class ExpenseList extends StatelessWidget {
     }
   }
 
-  IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'Restaurantes':
-        return Icons.restaurant;
-      case 'Transporte':
-        return Icons.directions_car;
-      case 'Entretenimiento':
-        return Icons.tv;
-      case 'Compras':
-        return Icons.shopping_bag;
-      case 'Servicios':
-        return Icons.build;
-      case 'Salud':
-        return Icons.favorite;
-      case 'Educación':
-        return Icons.school;
+  IconData _getSourceIcon(String source) {
+    switch (source) {
+      case 'Salario':
+        return Icons.work;
+      case 'Freelance':
+        return Icons.computer;
+      case 'Inversiones':
+        return Icons.trending_up;
+      case 'Regalos':
+        return Icons.card_giftcard;
+      case 'Bonos':
+        return Icons.star;
       case 'Otros':
         return Icons.more_horiz;
       default:
-        return Icons.category;
+        return Icons.attach_money;
     }
   }
 }

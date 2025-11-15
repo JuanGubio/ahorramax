@@ -1,6 +1,6 @@
 name: ahorramax
 description: App AhorraMax - Ahorro y recomendaciones AI
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -29,6 +29,7 @@ dependencies:
   http: ^1.2.2
   google_generative_ai: ^0.4.3
   audioplayers: ^6.0.0
+  speech_to_text: ^7.3.0
 
   image_picker: ^1.1.2
   geolocator: ^13.0.1

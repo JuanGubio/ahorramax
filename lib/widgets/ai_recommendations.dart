@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
-import '../screens/dashboard_screen.dart';
+import '../models.dart';
 
 class AIRecommendations extends StatefulWidget {
   final List<Expense> expenses;
@@ -21,13 +21,13 @@ class _AIRecommendationsState extends State<AIRecommendations> {
   bool _isLoadingRecommendations = false;
 
   // API Key de Gemini
-  static const String _apiKey = 'AIzaSyDm3AmOpLTs3l99DG2p3otfQqKOIb0e-Uc';
+  static const String _apiKey = 'AIzaSyA1tTTe2loIRAAUNnkYIIVhwP0TvTck_Ac';
 
   @override
   void initState() {
     super.initState();
     _model = GenerativeModel(
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash-lite',
       apiKey: _apiKey,
     );
   }

@@ -5,49 +5,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/add_expense_form.dart';
 import '../widgets/add_income_form.dart';
-import '../widgets/expense_chart.dart';
+import '../widgets/financial_overview_chart.dart';
 import '../widgets/expense_list.dart';
-import '../widgets/ai_recommendations.dart';
+import '../widgets/income_list.dart';
 import '../widgets/expense_calendar.dart';
-import 'package:table_calendar/table_calendar.dart';
 import '../widgets/streak_tracker.dart';
-import '../widgets/ai_chat.dart';
 import '../widgets/money_mascot.dart';
 import '../widgets/tutorial_overlay.dart';
-
-class Expense {
-  final String category;
-  final double amount;
-  final String description;
-  final DateTime date;
-  final String? photoUrl;
-  final String? location;
-  final double? amountSaved;
-
-  Expense({
-    required this.category,
-    required this.amount,
-    required this.description,
-    required this.date,
-    this.photoUrl,
-    this.location,
-    this.amountSaved,
-  });
-}
-
-class Income {
-  final String source;
-  final double amount;
-  final String description;
-  final DateTime date;
-
-  Income({
-    required this.source,
-    required this.amount,
-    required this.description,
-    required this.date,
-  });
-}
+import '../widgets/financial_goals.dart';
+import '../widgets/weekly_insights.dart';
+import '../widgets/financial_chatbot.dart';
+import '../models.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? toggleTheme;
@@ -62,7 +30,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   final AudioPlayer _audioPlayer = AudioPlayer();
   String userName = "Usuario";
   double balance = 0;
-  double totalSavingsFromAI = 0;
   double savings = 0;
   double monthlyExpenses = 0;
   final List<Expense> userExpenses = [];
@@ -71,11 +38,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   bool showAddMoney = false;
   String addMoneyAmount = "";
   bool isDarkMode = false;
-  String? chatCategory;
   bool showNavBar = false;
   bool showTutorial = false;
-  final List<Map<String, String>> notifications = [];
-  bool showNotifications = false;
   bool? currentStep;
   double? mainSavingsGoal;
   bool isLoading = true;
@@ -92,7 +56,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     _animationController.forward();
 
     _loadTutorialStatus();
-    _startNotificationTimer();
     _playSound("enter");
     _cargarDatosUsuario();
   }
@@ -204,37 +167,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     }
   }
 
-  void _startNotificationTimer() {
-    const notificationMessages = [
-      {'message': '🌟 Oferta especial: Pizza Hut 2x1 en pizzas medianas - ¡Ahorra \$8.50!', 'category': 'comida'},
-      {'message': '🛒 Mi Comisariato: 30% descuento en productos lácteos esta semana', 'category': 'compras'},
-      {'message': '🚌 Ecovía: Recarga tu tarjeta y obtén 10% extra gratis', 'category': 'transporte'},
-      {'message': '🍔 KFC: Combo familiar por solo \$12.99 - ¡Ideal para compartir!', 'category': 'comida'},
-      {'message': '🏪 Tía: Ofertas en productos de limpieza - Hasta 40% off', 'category': 'hogar'},
-      {'message': '📱 Movistar: Plan de datos ilimitado con 50% descuento por tiempo limitado', 'category': 'servicios'},
-      {'message': '👕 Ripley: 25% descuento en toda la sección de ropa', 'category': 'compras'},
-      {'message': '☕ Juan Valdez: Café colombiano con 20% descuento en sucursales', 'category': 'comida'},
-      {'message': '🎬 CineMark: Entradas 2x1 todos los miércoles', 'category': 'entretenimiento'},
-      {'message': '💄 Yves Rocher: 30% off en productos de belleza y cuidado personal', 'category': 'salud'},
-    ];
-
-    Future.delayed(const Duration(seconds: 45), () {
-      if (mounted) {
-        final randomNotification = notificationMessages[DateTime.now().millisecondsSinceEpoch % notificationMessages.length];
-        setState(() {
-          notifications.add({
-            'id': DateTime.now().toString(),
-            'message': randomNotification['message']!,
-            'category': randomNotification['category']!,
-          });
-          if (notifications.length > 5) {
-            notifications.removeAt(0);
-          }
-        });
-        _startNotificationTimer();
-      }
-    });
-  }
 
   void _playSound(String type) async {
     try {
@@ -258,44 +190,12 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
         await _audioPlayer.play(AssetSource(audioPath));
       }
     } catch (e) {
-      // Si no hay archivos de audio, usar Web Audio API como fallback
-      _playWebAudio(type);
+      // Si no hay archivos de audio disponibles, continuar sin sonido
+      // No mostrar error al usuario, solo continuar silenciosamente
+      print("Audio no disponible: $type - continuando sin sonido");
     }
   }
 
-  void _playWebAudio(String type) {
-    // Implementar sonidos usando Web Audio API como en el código original React
-    if (type == 'enter') {
-      // Sonido de bienvenida
-      _playTone(523, 0.3); // Do
-      Future.delayed(const Duration(milliseconds: 100), () {
-        _playTone(659, 0.3); // Mi
-      });
-    } else if (type == 'add') {
-      // Sonido de monedas
-      _playTone(880, 0.15); // La
-      Future.delayed(const Duration(milliseconds: 50), () {
-        _playTone(1100, 0.15); // Do#
-      });
-    } else if (type == 'remove') {
-      // Sonido de cajero
-      _playTone(300, 0.2); // Re bajo
-      Future.delayed(const Duration(milliseconds: 80), () {
-        _playTone(250, 0.15); // Do bajo
-      });
-    } else if (type == 'success') {
-      // Sonido de éxito
-      _playTone(1047, 0.2); // Do alto
-      Future.delayed(const Duration(milliseconds: 100), () {
-        _playTone(1319, 0.2); // Mi alto
-      });
-    }
-  }
-
-  void _playTone(double frequency, double duration) {
-    // Implementación simplificada de Web Audio API
-    // En un entorno real, usaríamos la Web Audio API de JavaScript
-  }
 
   void _handleTutorialComplete() async {
     final prefs = await SharedPreferences.getInstance();
@@ -307,9 +207,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   }
 
   void _showWelcomeSplash() {
-    setState(() => showTutorial = true); // Reuse tutorial state for welcome splash
-
-    // Create a simple welcome splash
+    // Don't reuse tutorial state - just show welcome splash without tutorial
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -433,7 +331,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  setState(() => showTutorial = false);
+                  // Don't set showTutorial = false since we're not using tutorial state
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2ECC71),
@@ -473,7 +371,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
       if (expense.amountSaved != null && expense.amountSaved! > 0) {
         savings += expense.amountSaved!;
-        totalSavingsFromAI += expense.amountSaved!;
       }
     });
 
@@ -483,15 +380,15 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     _cargarDatosUsuario();
   }
 
-  void _handleAddIncome(dynamic income) {
+  void _handleAddIncome(Income income) {
     setState(() {
       incomes.insert(0, income); // Agregar al inicio para mostrar los más recientes
       balance += income.amount;
     });
     _playSound("add");
 
-    // Forzar recarga de datos para asegurar persistencia
-    _cargarDatosUsuario();
+    // Nota: Los datos ya fueron guardados en Firebase por el formulario,
+    // no necesitamos recargar ya que causaría una condición de carrera
   }
 
   Future<void> _handleDeleteExpense(int index) async {
@@ -535,7 +432,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
         balance += expense.amount;
         if (expense.amountSaved != null && expense.amountSaved! > 0) {
           savings -= expense.amountSaved!;
-          totalSavingsFromAI -= expense.amountSaved!;
         }
         userExpenses.removeAt(index);
       });
@@ -546,6 +442,57 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Error al eliminar gasto: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleDeleteIncome(int index) async {
+    final income = incomes[index];
+
+    try {
+      String uid = FirebaseAuth.instance.currentUser!.uid;
+
+      // Buscar el documento del ingreso en Firebase para eliminarlo
+      QuerySnapshot incomesSnapshot = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(uid)
+          .collection('ingresos')
+          .where('fuente', isEqualTo: income.source)
+          .where('monto', isEqualTo: income.amount)
+          .where('descripcion', isEqualTo: income.description)
+          .where('fecha', isEqualTo: Timestamp.fromDate(income.date))
+          .get();
+
+      if (incomesSnapshot.docs.isNotEmpty) {
+        await incomesSnapshot.docs.first.reference.delete();
+
+        // Actualizar balance del usuario
+        DocumentReference userDoc = FirebaseFirestore.instance.collection('usuarios').doc(uid);
+        await FirebaseFirestore.instance.runTransaction((transaction) async {
+          DocumentSnapshot snapshot = await transaction.get(userDoc);
+          if (snapshot.exists) {
+            double currentBalance = snapshot['balanceActual'] ?? 0.0;
+
+            transaction.update(userDoc, {
+              'balanceActual': currentBalance - income.amount,
+            });
+          }
+        });
+      }
+
+      setState(() {
+        balance -= income.amount;
+        incomes.removeAt(index);
+      });
+
+      _playSound("remove");
+    } catch (e) {
+      print("Error al eliminar ingreso: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error al eliminar ingreso: $e"),
           backgroundColor: Colors.red,
         ),
       );
@@ -588,7 +535,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
         balance = 0;
         monthlyExpenses = 0;
         savings = 0;
-        totalSavingsFromAI = 0;
         userExpenses.clear();
         incomes.clear();
         showResetConfirm = false;
@@ -655,56 +601,43 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     }
   }
 
-  Future<void> _handleAcceptSavings(double savingsAmount) async {
-    try {
-      String uid = FirebaseAuth.instance.currentUser!.uid;
 
-      // Actualizar ahorro total en Firebase
-      DocumentReference userDoc = FirebaseFirestore.instance.collection('usuarios').doc(uid);
-      await FirebaseFirestore.instance.runTransaction((transaction) async {
-        DocumentSnapshot snapshot = await transaction.get(userDoc);
-        if (snapshot.exists) {
-          double currentSavings = snapshot['ahorroTotal'] ?? 0.0;
-          transaction.update(userDoc, {
-            'ahorroTotal': currentSavings + savingsAmount,
-          });
-        }
-      });
 
-      setState(() {
-        totalSavingsFromAI += savingsAmount;
-        savings += savingsAmount;
-      });
-      _playSound("success");
-    } catch (e) {
-      print("Error al aceptar ahorros: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Error al aceptar ahorros: $e"),
-          backgroundColor: Colors.red,
+
+
+  void _openFinancialChatbot() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: FinancialChatbot(
+          expenses: userExpenses,
+          incomes: incomes,
+          balance: balance,
+          savings: savings,
         ),
-      );
-    }
+      ),
+    );
   }
 
-  void _toggleDarkMode() {
-    setState(() => isDarkMode = !isDarkMode);
-  }
 
-  void _openChatWithCategory(String category) {
-    setState(() {
-      chatCategory = category;
-      showNavBar = false;
+  bool _hasActivityToday() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // Check if there are any expenses today
+    final hasExpensesToday = userExpenses.any((expense) {
+      final expenseDate = DateTime(expense.date.year, expense.date.month, expense.date.day);
+      return expenseDate == today;
     });
-  }
 
-  void _handleNotificationClick(Map<String, String> notification) {
-    setState(() => showNotifications = false);
-    setState(() => chatCategory = notification['category']);
-    // Remover la notificación
-    setState(() {
-      notifications.removeWhere((n) => n['id'] == notification['id']);
+    // Check if there are any incomes today
+    final hasIncomesToday = incomes.any((income) {
+      final incomeDate = DateTime(income.date.year, income.date.month, income.date.day);
+      return incomeDate == today;
     });
+
+    return hasExpensesToday || hasIncomesToday;
   }
 
   String _formatLargeNumber(double num) {
@@ -738,6 +671,13 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     }
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: _openFinancialChatbot,
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.smart_toy),
+        tooltip: 'Asistente Financiero IA',
+      ),
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -823,35 +763,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 color: Colors.white,
                               ),
                             ),
-                            Stack(
-                              children: [
-                                IconButton(
-                                  onPressed: () => setState(() => showNotifications = !showNotifications),
-                                  icon: const Icon(Icons.calendar_month),
-                                  tooltip: 'Calendario Rápido',
-                                ),
-                                if (notifications.isNotEmpty)
-                                  Positioned(
-                                    right: 8,
-                                    top: 8,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.red,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Text(
-                                        notifications.length.toString(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
                             GestureDetector(
                               onTap: () => Navigator.pushNamed(context, '/profile'),
                               child: CircleAvatar(
@@ -893,7 +804,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                     'Servicios',
                                     'Hogar'
                                   ].map((category) => ElevatedButton.icon(
-                                    onPressed: () => _openChatWithCategory(category.toLowerCase()),
+                                    onPressed: () => _openFinancialChatbot(),
                                     icon: Icon(_getCategoryIcon(category.toLowerCase())),
                                     label: Text(category),
                                     style: ElevatedButton.styleFrom(
@@ -929,34 +840,104 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                       ),
                       const SizedBox(height: 24),
 
-                      // Total del día
+                      // Resumen del día
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Theme.of(context).primaryColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        child: Column(
                           children: [
-                            const Text(
-                              'Total del día:',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Resumen del día:',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'Gastos: -\$${userExpenses.where((expense) {
+                                        final now = DateTime.now();
+                                        return expense.date.year == now.year &&
+                                               expense.date.month == now.month &&
+                                               expense.date.day == now.day;
+                                      }).fold<double>(0, (sum, expense) => sum + expense.amount).toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.red,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Ingresos: +\$${incomes.where((income) {
+                                        final now = DateTime.now();
+                                        return income.date.year == now.year &&
+                                               income.date.month == now.month &&
+                                               income.date.day == now.day;
+                                      }).fold<double>(0, (sum, income) => sum + income.amount).toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                            Text(
-                              '\$${userExpenses.where((expense) {
-                                final now = DateTime.now();
-                                return expense.date.year == now.year &&
-                                       expense.date.month == now.month &&
-                                       expense.date.day == now.day;
-                              }).fold<double>(0, (sum, expense) => sum + expense.amount).toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.red,
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.8),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    'Balance del día: ',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Builder(
+                                    builder: (context) {
+                                      final now = DateTime.now();
+                                      final dayExpenses = userExpenses.where((expense) =>
+                                        expense.date.year == now.year &&
+                                        expense.date.month == now.month &&
+                                        expense.date.day == now.day
+                                      ).fold<double>(0, (sum, expense) => sum + expense.amount);
+
+                                      final dayIncomes = incomes.where((income) =>
+                                        income.date.year == now.year &&
+                                        income.date.month == now.month &&
+                                        income.date.day == now.day
+                                      ).fold<double>(0, (sum, income) => sum + income.amount);
+
+                                      final dayBalance = dayIncomes - dayExpenses;
+                                      final isPositive = dayBalance >= 0;
+
+                                      return Text(
+                                        '${isPositive ? '+' : ''}\$${dayBalance.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: isPositive ? Colors.green : Colors.red,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -972,7 +953,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
                       // Balance Cards
                       GridView.count(
-                        crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                        crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
                         crossAxisSpacing: 16,
                         mainAxisSpacing: 16,
                         shrinkWrap: true,
@@ -1044,7 +1025,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             ),
                           ),
 
-                          // Savings Card
+                          // Income Card
                           Card(
                             elevation: 8,
                             shape: RoundedRectangleBorder(
@@ -1054,7 +1035,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [Colors.blue, Colors.indigo],
+                                  colors: [Colors.teal, Colors.greenAccent],
                                 ),
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -1070,31 +1051,28 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                           color: Colors.white.withOpacity(0.2),
                                           borderRadius: BorderRadius.circular(12),
                                         ),
-                                        child: const Icon(Icons.savings, color: Colors.white),
+                                        child: const Icon(Icons.trending_up, color: Colors.white),
                                       ),
-                                      const Icon(Icons.trending_up, color: Colors.white70),
+                                      const Icon(Icons.arrow_upward, color: Colors.white70),
                                     ],
                                   ),
                                   const SizedBox(height: 16),
                                   const Text(
-                                    'Ahorros Totales',
+                                    'Ingresos del Mes',
                                     style: TextStyle(color: Colors.white70, fontSize: 14),
                                   ),
                                   Text(
-                                    '\$${savings.toStringAsFixed(2)}',
+                                    '\$${incomes.fold<double>(0, (sum, income) => sum + income.amount).toStringAsFixed(2)}',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 28,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  if (totalSavingsFromAI > 0) ...[
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Has ahorrado \$${totalSavingsFromAI.toStringAsFixed(2)} con recomendaciones de IA',
-                                      style: const TextStyle(color: Colors.white70, fontSize: 12),
-                                    ),
-                                  ],
+                                  const Text(
+                                    'Total recibido',
+                                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                                  ),
                                 ],
                               ),
                             ),
@@ -1152,82 +1130,60 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               ),
                             ),
                           ),
+
+                          // Savings Card
+                          Card(
+                            elevation: 8,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Colors.blue, Colors.indigo],
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(Icons.savings, color: Colors.white),
+                                      ),
+                                      const Icon(Icons.trending_up, color: Colors.white70),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const Text(
+                                    'Ahorros Totales',
+                                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                                  ),
+                                  Text(
+                                    '\$${savings.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
 
                       const SizedBox(height: 24),
 
-                      // Savings Goal Card
-                      Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(Icons.savings, color: Theme.of(context).primaryColor),
-                                  const SizedBox(width: 8),
-                                  const Text(
-                                    'Tu Meta de Ahorro',
-                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              if (balance > 0) ...[
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade100,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        'Balance Actual',
-                                        style: TextStyle(color: Colors.grey, fontSize: 14),
-                                      ),
-                                      Text(
-                                        '\$${_formatLargeNumber(balance)}',
-                                        style: const TextStyle(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                const Text(
-                                  'Sugerencias para ti:',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 8),
-                                _buildSavingsSuggestions(),
-                              ] else ...[
-                                const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(20),
-                                    child: Text(
-                                      'Comienza agregando dinero a tu balance para ver sugerencias personalizadas',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(color: Colors.grey),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
 
                       // Forms
                       Row(
@@ -1246,19 +1202,80 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
                       // Additional Components
                       const SizedBox(height: 24),
-                      StreakTracker(),
+                      StreakTracker(hasActivityToday: _hasActivityToday()),
                       const SizedBox(height: 16),
-                      AIRecommendations(
-                        expenses: userExpenses,
-                        onAcceptSavings: _handleAcceptSavings,
+                      const FinancialGoalsWidget(),
+                      const SizedBox(height: 16),
+                      WeeklyInsights(expenses: userExpenses, incomes: incomes),
+                      const SizedBox(height: 16),
+
+                      // Transaction History Tabs
+                      DefaultTabController(
+                        length: 2,
+                        child: Column(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).cardColor,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Theme.of(context).dividerColor,
+                                  width: 1,
+                                ),
+                              ),
+                              child: TabBar(
+                                indicator: BoxDecoration(
+                                  color: Theme.of(context).primaryColor,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                labelColor: Colors.white,
+                                unselectedLabelColor: Theme.of(context).textTheme.bodyLarge?.color,
+                                tabs: const [
+                                  Tab(
+                                    icon: Icon(Icons.trending_down),
+                                    text: 'Gastos',
+                                  ),
+                                  Tab(
+                                    icon: Icon(Icons.trending_up),
+                                    text: 'Ingresos',
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              height: 400, // Fixed height for tab content
+                              child: TabBarView(
+                                children: [
+                                  // Expenses Tab
+                                  SingleChildScrollView(
+                                    child: Column(
+                                      children: [
+                                        ExpenseList(
+                                          expenses: userExpenses,
+                                          onDeleteExpense: _handleDeleteExpense,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        FinancialOverviewChart(
+                                          expenses: userExpenses,
+                                          incomes: incomes,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Incomes Tab
+                                  SingleChildScrollView(
+                                    child: IncomeList(
+                                      incomes: incomes,
+                                      onDeleteIncome: _handleDeleteIncome,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      ExpenseList(
-                        expenses: userExpenses,
-                        onDeleteExpense: _handleDeleteExpense,
-                      ),
-                      const SizedBox(height: 16),
-                      ExpenseChart(expenses: userExpenses),
 
                     ],
                   ),
@@ -1267,195 +1284,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             ),
           ),
 
-          // Notifications Panel / Calendar Quick Access
-          if (showNotifications)
-            Positioned(
-              top: 80,
-              right: 16,
-              child: Container(
-                width: 350,
-                constraints: const BoxConstraints(maxHeight: 400),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.calendar_month, color: Theme.of(context).primaryColor),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Calendario Rápido',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Mini Calendar Widget
-                    Container(
-                      height: 320,
-                      width: double.infinity,
-                      child: TableCalendar(
-                        firstDay: DateTime(2020),
-                        lastDay: DateTime(2030),
-                        focusedDay: DateTime.now(),
-                        calendarFormat: CalendarFormat.month,
-                        headerStyle: HeaderStyle(
-                          formatButtonVisible: false,
-                          titleCentered: true,
-                          titleTextStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        calendarStyle: CalendarStyle(
-                          cellMargin: const EdgeInsets.all(3),
-                          cellPadding: const EdgeInsets.all(1),
-                          selectedDecoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor,
-                            shape: BoxShape.circle,
-                          ),
-                          todayDecoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor.withOpacity(0.5),
-                            shape: BoxShape.circle,
-                          ),
-                          markerDecoration: BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          markerSize: 6,
-                          markersMaxCount: 1,
-                          defaultTextStyle: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          weekendTextStyle: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          outsideTextStyle: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        eventLoader: (day) {
-                          return userExpenses.where((expense) =>
-                            expense.date.year == day.year &&
-                            expense.date.month == day.month &&
-                            expense.date.day == day.day
-                          ).toList();
-                        },
-                        calendarBuilders: CalendarBuilders(
-                          defaultBuilder: (context, day, focusedDay) {
-                            final expensesForDay = userExpenses.where((expense) =>
-                              expense.date.year == day.year &&
-                              expense.date.month == day.month &&
-                              expense.date.day == day.day
-                            ).toList();
-
-                            if (expensesForDay.isNotEmpty) {
-                              // Obtener la categoría más común del día
-                              final categoryCount = <String, int>{};
-                              for (final expense in expensesForDay) {
-                                categoryCount[expense.category] = (categoryCount[expense.category] ?? 0) + 1;
-                              }
-                              final mostCommonCategory = categoryCount.entries
-                                  .reduce((a, b) => a.value > b.value ? a : b)
-                                  .key;
-
-                              return Container(
-                                margin: const EdgeInsets.all(3),
-                                decoration: BoxDecoration(
-                                  color: _getCategoryColor(mostCommonCategory).withOpacity(0.15),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: _getCategoryColor(mostCommonCategory).withOpacity(0.3),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    Text(
-                                      '${day.day}',
-                                      style: TextStyle(
-                                        color: Theme.of(context).brightness == Brightness.dark
-                                            ? Colors.white
-                                            : Colors.black87,
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    Positioned(
-                                      bottom: 2,
-                                      right: 2,
-                                      child: Container(
-                                        width: 14,
-                                        height: 14,
-                                        decoration: BoxDecoration(
-                                          color: _getCategoryColor(mostCommonCategory),
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: Theme.of(context).cardColor,
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          _getCategoryIcon(mostCommonCategory),
-                                          color: Colors.white,
-                                          size: 8,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
-
-                            return null;
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    if (notifications.isNotEmpty) ...[
-                      const Divider(),
-                      const Text(
-                        'Ofertas Cerca de Ti',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Flexible(
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: notifications.length,
-                          itemBuilder: (context, index) {
-                            final notification = notifications[index];
-                            return ListTile(
-                              dense: true,
-                              title: Text(notification['message']!, style: const TextStyle(fontSize: 14)),
-                              subtitle: const Text('Toca para más detalles en el chat IA', style: TextStyle(fontSize: 12)),
-                              onTap: () => _handleNotificationClick(notification),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
 
           // Add Money Dialog
           if (showAddMoney)
@@ -1579,13 +1407,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
           if (showTutorial)
             TutorialOverlay(onComplete: _handleTutorialComplete),
 
-          // AI Chat
-          if (chatCategory != null && !showTutorial)
-            Positioned(
-              bottom: 16,
-              right: 16,
-              child: AIChat(initialCategory: chatCategory!),
-            ),
 
           // Money Mascot
           if (!showTutorial)
@@ -1599,69 +1420,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     );
   }
 
-  Widget _buildSavingsSuggestions() {
-    if (balance < 100) {
-      return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.green.shade50,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.green.shade200),
-        ),
-        child: Text(
-          '\$${(100 - balance).toStringAsFixed(2)} más y tendrás \$100 - perfecto para una comida especial',
-        ),
-      );
-    } else if (balance >= 100 && balance < 200) {
-      return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.blue.shade50,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.blue.shade200),
-        ),
-        child: const Text(
-          'Con tu balance puedes comprar una cena para dos en un buen restaurante',
-        ),
-      );
-    } else if (balance >= 200 && balance < 400) {
-      return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.orange.shade50,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.orange.shade200),
-        ),
-        child: Text(
-          '\$${(400 - balance).toStringAsFixed(2)} más y tendrás \$400 - suficiente para un electrodoméstico útil',
-        ),
-      );
-    } else if (balance >= 400 && balance < 1000) {
-      return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.purple.shade50,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.purple.shade200),
-        ),
-        child: const Text(
-          '🏆 Con tu balance puedes comprar una refrigeradora o TV de buena calidad',
-        ),
-      );
-    } else {
-      return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.teal.shade50,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.teal.shade200),
-        ),
-        child: Text(
-          '¡Excelente! Con \$${_formatLargeNumber(balance)} puedes comprar electrodomésticos premium, muebles o invertir',
-        ),
-      );
-    }
-  }
 
   Color _getCategoryColor(String category) {
     switch (category) {

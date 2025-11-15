@@ -4,7 +4,9 @@ import 'dart:io';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'smart_autocomplete.dart';
 
 class AddExpenseForm extends StatefulWidget {
   final Function(Map<String, dynamic>) onAddExpense;
@@ -26,6 +28,46 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
   bool isLoadingLocation = false;
   bool showSavingsOption = false;
   String amountSaved = "";
+
+  // Voice input
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _speechText = '';
+  double _confidence = 1.0;
+  bool _isProcessingVoice = false;
+
+  // AI processing
+  late GenerativeModel _model;
+  static const String _apiKey = 'AIzaSyA1tTTe2loIRAAUNnkYIIVhwP0TvTck_Ac';
+
+  // Controllers for proper text field management
+  late TextEditingController _descriptionController;
+  late TextEditingController _amountController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize controllers
+    _descriptionController = TextEditingController(text: description);
+    _amountController = TextEditingController(text: amount);
+
+    // Initialize speech-to-text
+    _speech = stt.SpeechToText();
+
+    // Initialize AI model
+    _model = GenerativeModel(
+      model: 'gemini-2.5-flash-lite',
+      apiKey: _apiKey,
+    );
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
 
   final List<String> categories = [
     "Restaurantes",
@@ -90,6 +132,196 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
         isLoadingLocation = false;
       });
     }
+  }
+
+  // Voice input functions
+  Future<void> _listenForExpense() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (val) => print('onStatus: $val'),
+        onError: (val) => print('onError: $val'),
+      );
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (val) => setState(() {
+            _speechText = val.recognizedWords;
+            if (val.hasConfidenceRating && val.confidence > 0) {
+              _confidence = val.confidence;
+            }
+          }),
+          localeId: 'es_ES', // Spanish locale
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+      if (_speechText.isNotEmpty) {
+        await _processVoiceInput(_speechText);
+      }
+    }
+  }
+
+  Future<void> _processVoiceInput(String voiceText) async {
+    setState(() => _isProcessingVoice = true);
+
+    try {
+      final prompt = '''Analiza el siguiente texto hablado sobre un gasto y extrae la informacion relevante.
+Texto: "$voiceText"
+
+IMPORTANTE: Identifica numeros como montos. Por ejemplo:
+- "50 dolares para comida" -> amount: "50"
+- "Gaste 25.50 en transporte" -> amount: "25.50"
+- "Pago de 100 por servicios" -> amount: "100"
+
+Responde SOLO con un JSON valido en este formato exacto:
+{
+  "amount": "numero decimal o null si no se menciona",
+  "category": "una de estas categorias exactas: Restaurantes, Transporte, Entretenimiento, Compras, Servicios, Salud, Educacion, Otros",
+  "description": "descripcion breve del gasto"
+}
+
+Reglas:
+- Busca numeros precedidos por \$, dolares, pesos, etc. como montos
+- Si no se menciona monto, usa null
+- Elige la categoria mas apropiada de la lista
+- La descripcion debe ser breve pero descriptiva
+- Si no puedes determinar algo, usa valores por defecto apropiados''';
+
+      final content = [Content.text(prompt)];
+      final response = await _model.generateContent(content);
+
+      if (response.text != null) {
+        final result = _parseVoiceResponse(response.text!);
+
+        setState(() {
+          if (result['amount'] != null && result['amount']!.isNotEmpty) {
+            amount = result['amount']!;
+            _amountController.text = amount;
+          }
+          if (result['category'] != null && result['category']!.isNotEmpty) {
+            category = result['category']!;
+          }
+          if (result['description'] != null && result['description']!.isNotEmpty) {
+            description = result['description']!;
+            _descriptionController.text = description;
+          }
+        });
+
+        // Mostrar confirmación
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.mic, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Procesado: ${result['amount'] ?? 'Sin monto'} - ${result['category'] ?? 'Sin categoría'}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.blue,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error processing voice: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error al procesar el audio. Intenta de nuevo.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isProcessingVoice = false);
+    }
+  }
+
+  Map<String, String?> _parseVoiceResponse(String response) {
+    try {
+      // Limpiar la respuesta de posibles caracteres extra
+      final cleanResponse = response.trim();
+
+      // Extraer JSON del response
+      final jsonStart = cleanResponse.indexOf('{');
+      final jsonEnd = cleanResponse.lastIndexOf('}') + 1;
+      if (jsonStart != -1 && jsonEnd != -1) {
+        final jsonStr = cleanResponse.substring(jsonStart, jsonEnd);
+
+        // Intentar diferentes patrones de regex para mayor robustez
+        String? amount;
+        String? category;
+        String? description;
+
+        // Buscar amount - puede estar con o sin comillas
+        final amountPattern1 = RegExp(r'"amount":\s*"([^"]*)"').firstMatch(jsonStr);
+        final amountPattern2 = RegExp(r'"amount":\s*([^,}\s]+)').firstMatch(jsonStr);
+        amount = amountPattern1?.group(1) ?? amountPattern2?.group(1);
+
+        // Buscar category
+        final categoryPattern1 = RegExp(r'"category":\s*"([^"]*)"').firstMatch(jsonStr);
+        final categoryPattern2 = RegExp(r'"category":\s*([^,}\s]+)').firstMatch(jsonStr);
+        category = categoryPattern1?.group(1) ?? categoryPattern2?.group(1);
+
+        // Buscar description
+        final descriptionPattern1 = RegExp(r'"description":\s*"([^"]*)"').firstMatch(jsonStr);
+        final descriptionPattern2 = RegExp(r'"description":\s*([^,}]+)').firstMatch(jsonStr);
+        description = descriptionPattern1?.group(1) ?? descriptionPattern2?.group(1);
+
+        // Limpiar valores
+        amount = amount?.replaceAll('"', '').trim();
+        category = category?.replaceAll('"', '').trim();
+        description = description?.replaceAll('"', '').trim();
+
+        // Validar que amount sea un número válido
+        if (amount != null && amount.isNotEmpty) {
+          final numAmount = double.tryParse(amount.replaceAll(',', '.'));
+          if (numAmount == null || numAmount <= 0) {
+            amount = null; // Invalidar si no es un número válido
+          }
+        }
+
+        return {
+          'amount': amount,
+          'category': category,
+          'description': description,
+        };
+      }
+    } catch (e) {
+      print('Error parsing voice response: $e');
+    }
+
+    // Fallback mejorado - intentar extraer información del texto original
+    final originalText = response.toLowerCase();
+
+    // Buscar patrones comunes de montos
+    final amountPatterns = [
+      RegExp(r'(\d+(?:[.,]\d{1,2})?)\s*(?:dólares?|pesos?|\$|usd)'),
+      RegExp(r'\$?\s*(\d+(?:[.,]\d{1,2})?)'),
+    ];
+
+    String? extractedAmount;
+    for (final pattern in amountPatterns) {
+      final match = pattern.firstMatch(originalText);
+      if (match != null) {
+        extractedAmount = match.group(1)?.replaceAll(',', '.');
+        break;
+      }
+    }
+
+    return {
+      'amount': extractedAmount,
+      'category': 'Otros',
+      'description': response.length > 50 ? response.substring(0, 50) : response,
+    };
   }
 
   Future<void> pickImage() async {
@@ -227,6 +459,10 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
           amountSaved = "";
           isOpen = false;
         });
+
+        // Reset controllers
+        _descriptionController.clear();
+        _amountController.clear();
 
         print("Formulario reseteado correctamente");
       } catch (e) {
@@ -504,9 +740,10 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
+                        controller: _amountController,
                         keyboardType: TextInputType.number,
-                        initialValue: amount,
                         onChanged: (value) => setState(() => amount = value),
+                        style: const TextStyle(fontSize: 18, color: Colors.black),
                         decoration: InputDecoration(
                           prefixText: '\$ ',
                           hintText: '0.00',
@@ -524,36 +761,76 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                           ),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         ),
-                        style: const TextStyle(fontSize: 18),
                       ),
 
                       const SizedBox(height: 24),
 
-                      // Descripción
-                      const Text(
-                        'Descripción',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      // Descripción con autocompletado inteligente y voz
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Descripción',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _isProcessingVoice ? null : _listenForExpense,
+                            icon: Icon(
+                              _isListening ? Icons.mic_off : Icons.mic,
+                              color: _isListening ? Colors.red : Colors.blue,
+                            ),
+                            tooltip: _isListening ? 'Escuchando...' : 'Hablar para ingresar gasto',
+                            style: IconButton.styleFrom(
+                              backgroundColor: _isListening
+                                  ? Colors.red.withOpacity(0.1)
+                                  : Colors.blue.withOpacity(0.1),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
-                      TextFormField(
-                        initialValue: description,
-                        onChanged: (value) => setState(() => description = value),
-                        decoration: InputDecoration(
-                          hintText: '¿En qué gastaste?',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(width: 2),
+
+                      // Indicador de procesamiento de voz
+                      if (_isProcessingVoice) ...[
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.blue.shade200),
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey.shade300, width: 2),
+                          child: Row(
+                            children: [
+                              const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Procesando tu voz con IA...',
+                                style: TextStyle(
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         ),
+                        const SizedBox(height: 8),
+                      ],
+
+                      SmartAutocomplete(
+                        hintText: '¿En qué gastaste? (Escribe o habla)',
+                        fieldType: 'description',
+                        controller: _descriptionController,
+                        onSuggestionSelected: (suggestion) {
+                          setState(() {
+                            description = suggestion;
+                            _descriptionController.text = suggestion;
+                          });
+                        },
                       ),
 
                       const SizedBox(height: 24),
@@ -655,9 +932,30 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                       const SizedBox(height: 24),
 
                       // Foto
-                      const Text(
-                        'Foto (Opcional)',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Foto de evidencia',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              'OPCIONAL',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       Row(
@@ -666,7 +964,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                             child: ElevatedButton.icon(
                               onPressed: pickImage,
                               icon: const Icon(Icons.camera_alt),
-                              label: Text(photoFile != null ? 'Cambiar Foto' : 'Agregar Evidencia'),
+                              label: Text(photoFile != null ? 'Cambiar foto' : 'Agregar foto (opcional)'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.transparent,
                                 foregroundColor: Theme.of(context).primaryColor,
@@ -872,6 +1170,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                                 keyboardType: TextInputType.number,
                                 initialValue: amountSaved,
                                 onChanged: (value) => setState(() => amountSaved = value),
+                                style: const TextStyle(color: Colors.black),
                                 decoration: InputDecoration(
                                   prefixText: '\$ ',
                                   hintText: '0.00',
@@ -936,6 +1235,9 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
                                 location = "";
                                 showSavingsOption = false;
                                 amountSaved = "";
+                                // Reset controllers
+                                _descriptionController.clear();
+                                _amountController.clear();
                               }),
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 16),

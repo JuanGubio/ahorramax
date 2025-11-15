@@ -1,23 +1,12 @@
  import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
-class IncomeData {
-  final String source;
-  final double amount;
-  final String description;
-  final DateTime date;
-
-  IncomeData({
-    required this.source,
-    required this.amount,
-    required this.description,
-    required this.date,
-  });
-}
+ import 'package:cloud_firestore/cloud_firestore.dart';
+ import 'package:firebase_auth/firebase_auth.dart';
+ import 'package:speech_to_text/speech_to_text.dart' as stt;
+ import 'package:google_generative_ai/google_generative_ai.dart';
+ import '../models.dart';
 
 class AddIncomeForm extends StatefulWidget {
-  final void Function(IncomeData) onAddIncome;
+  final void Function(Income) onAddIncome;
 
   const AddIncomeForm({super.key, required this.onAddIncome});
 
@@ -32,6 +21,21 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
   String description = "";
   DateTime incomeDate = DateTime.now();
 
+  // Voice input
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _speechText = '';
+  double _confidence = 1.0;
+  bool _isProcessingVoice = false;
+
+  // AI processing
+  late GenerativeModel _model;
+  static const String _apiKey = 'AIzaSyA1tTTe2loIRAAUNnkYIIVhwP0TvTck_Ac';
+
+  // Controllers for proper text field management
+  late TextEditingController _descriptionController;
+  late TextEditingController _amountController;
+
   final List<String> incomeSources = [
     "Salario",
     "Freelance",
@@ -41,7 +45,32 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
     "Otros",
   ];
 
-  Future<void> guardarIngresoEnFirebase(IncomeData income) async {
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize controllers
+    _descriptionController = TextEditingController(text: description);
+    _amountController = TextEditingController(text: amount);
+
+    // Initialize speech-to-text
+    _speech = stt.SpeechToText();
+
+    // Initialize AI model
+    _model = GenerativeModel(
+      model: 'gemini-2.5-flash-lite',
+      apiKey: _apiKey,
+    );
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  Future<void> guardarIngresoEnFirebase(Income income) async {
     try {
       String uid = FirebaseAuth.instance.currentUser!.uid;
 
@@ -92,56 +121,305 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
     }
   }
 
-  void handleSubmit() async {
-    if (source.isNotEmpty && amount.isNotEmpty && description.isNotEmpty) {
-      final income = IncomeData(
-        source: source,
-        amount: double.parse(amount),
-        description: description,
-        date: incomeDate,
+  // Voice input functions
+  Future<void> _listenForIncome() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (val) => print('onStatus: $val'),
+        onError: (val) => print('onError: $val'),
       );
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (val) => setState(() {
+            _speechText = val.recognizedWords;
+            if (val.hasConfidenceRating && val.confidence > 0) {
+              _confidence = val.confidence;
+            }
+          }),
+          localeId: 'es_ES', // Spanish locale
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+      if (_speechText.isNotEmpty) {
+        await _processVoiceInputIncome(_speechText);
+      }
+    }
+  }
 
-      try {
-        // Guardar en Firebase primero
-        await guardarIngresoEnFirebase(income);
+  Future<void> _processVoiceInputIncome(String voiceText) async {
+    setState(() => _isProcessingVoice = true);
 
-        // Luego llamar al callback local
-        widget.onAddIncome(income);
+    try {
+      final prompt = '''Analiza el siguiente texto hablado sobre un ingreso y extrae la informacion relevante.
+Texto: "$voiceText"
 
-        // Reset form
+IMPORTANTE: Identifica numeros como montos. Por ejemplo:
+- "50 dolares de salario" -> amount: "50"
+- "Gane 25.50 en freelance" -> amount: "25.50"
+- "Recibi 100 por bono" -> amount: "100"
+- "50 \$ de zapatos" -> amount: "50"
+
+Responde SOLO con un JSON valido en este formato exacto:
+{
+  "amount": "numero decimal o null si no se menciona",
+  "source": "una de estas fuentes exactas: Salario, Freelance, Inversiones, Regalos, Bonos, Otros",
+  "description": "descripcion breve del ingreso"
+}
+
+Reglas:
+- Busca numeros precedidos por \$, dolares, pesos, etc. como montos
+- Si no se menciona monto, usa null
+- Elige la fuente mas apropiada de la lista
+- La descripcion debe ser breve pero descriptiva
+- Si no puedes determinar algo, usa valores por defecto apropiados''';
+
+      final content = [Content.text(prompt)];
+      final response = await _model.generateContent(content);
+
+      if (response.text != null) {
+        final result = _parseVoiceResponseIncome(response.text!);
+
         setState(() {
-          source = "";
-          amount = "";
-          description = "";
-          incomeDate = DateTime.now();
-          isOpen = false;
+          if (result['amount'] != null) {
+            amount = result['amount']!;
+            _amountController.text = amount;
+          }
+          if (result['source'] != null) {
+            source = result['source']!;
+          }
+          if (result['description'] != null) {
+            description = result['description']!;
+            _descriptionController.text = description;
+          }
         });
 
-        // Mostrar mensaje de éxito
-        if (context.mounted) {
+        // Mostrar confirmación
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Row(
                 children: [
-                  Icon(Icons.check_circle, color: Colors.white),
+                  const Icon(Icons.mic, color: Colors.white),
                   const SizedBox(width: 8),
-                  Text("Ingreso de \$${income.amount.toStringAsFixed(2)} guardado correctamente"),
+                  Expanded(
+                    child: Text(
+                      'Procesado: ${result['amount'] ?? 'Sin monto'} - ${result['source'] ?? 'Sin fuente'}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ],
               ),
-              backgroundColor: Colors.green,
+              backgroundColor: Colors.blue,
+              duration: const Duration(seconds: 3),
             ),
           );
         }
-      } catch (e) {
-        // Mostrar error al usuario
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Error al guardar ingreso: $e"),
-              backgroundColor: Colors.red,
-            ),
-          );
+      }
+    } catch (e) {
+      print('Error processing voice: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error al procesar el audio. Intenta de nuevo.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isProcessingVoice = false);
+    }
+  }
+
+  Map<String, String?> _parseVoiceResponseIncome(String response) {
+    try {
+      // Limpiar la respuesta de posibles caracteres extra
+      final cleanResponse = response.trim();
+
+      // Extraer JSON del response
+      final jsonStart = cleanResponse.indexOf('{');
+      final jsonEnd = cleanResponse.lastIndexOf('}') + 1;
+      if (jsonStart != -1 && jsonEnd != -1) {
+        final jsonStr = cleanResponse.substring(jsonStart, jsonEnd);
+
+        // Intentar diferentes patrones de regex para mayor robustez
+        String? amount;
+        String? source;
+        String? description;
+
+        // Buscar amount - puede estar con o sin comillas
+        final amountPattern1 = RegExp(r'"amount":\s*"([^"]*)"').firstMatch(jsonStr);
+        final amountPattern2 = RegExp(r'"amount":\s*([^,}\s]+)').firstMatch(jsonStr);
+        amount = amountPattern1?.group(1) ?? amountPattern2?.group(1);
+
+        // Buscar source
+        final sourcePattern1 = RegExp(r'"source":\s*"([^"]*)"').firstMatch(jsonStr);
+        final sourcePattern2 = RegExp(r'"source":\s*([^,}\s]+)').firstMatch(jsonStr);
+        source = sourcePattern1?.group(1) ?? sourcePattern2?.group(1);
+
+        // Buscar description
+        final descriptionPattern1 = RegExp(r'"description":\s*"([^"]*)"').firstMatch(jsonStr);
+        final descriptionPattern2 = RegExp(r'"description":\s*([^,}]+)').firstMatch(jsonStr);
+        description = descriptionPattern1?.group(1) ?? descriptionPattern2?.group(1);
+
+        // Limpiar valores
+        amount = amount?.replaceAll('"', '').trim();
+        source = source?.replaceAll('"', '').trim();
+        description = description?.replaceAll('"', '').trim();
+
+        // Validar que amount sea un número válido
+        if (amount != null && amount.isNotEmpty) {
+          final numAmount = double.tryParse(amount.replaceAll(',', '.'));
+          if (numAmount == null || numAmount <= 0) {
+            amount = null; // Invalidar si no es un número válido
+          }
         }
+
+        return {
+          'amount': amount,
+          'source': source,
+          'description': description,
+        };
+      }
+    } catch (e) {
+      print('Error parsing voice response: $e');
+    }
+
+    // Fallback mejorado - intentar extraer información del texto original
+    final originalText = response.toLowerCase();
+
+    // Buscar patrones comunes de montos
+    final amountPatterns = [
+      RegExp(r'(\d+(?:[.,]\d{1,2})?)\s*(?:dólares?|pesos?|\$|usd)'),
+      RegExp(r'\$?\s*(\d+(?:[.,]\d{1,2})?)'),
+    ];
+
+    String? extractedAmount;
+    for (final pattern in amountPatterns) {
+      final match = pattern.firstMatch(originalText);
+      if (match != null) {
+        extractedAmount = match.group(1)?.replaceAll(',', '.');
+        break;
+      }
+    }
+
+    return {
+      'amount': extractedAmount,
+      'source': 'Otros',
+      'description': response.length > 50 ? response.substring(0, 50) : response,
+    };
+  }
+
+  void handleSubmit() async {
+    // Validar campos
+    if (source.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Por favor selecciona una fuente de ingreso"),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (amount.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Por favor ingresa el monto del ingreso"),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Validar que el monto sea un número válido
+    double? parsedAmount;
+    try {
+      parsedAmount = double.parse(amount.replaceAll(',', '.'));
+      if (parsedAmount <= 0) {
+        throw const FormatException("Monto debe ser mayor a 0");
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Por favor ingresa un monto válido (ej: 100.50)"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (description.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Por favor ingresa una descripción"),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
+    final income = Income(
+      source: source,
+      amount: parsedAmount,
+      description: description,
+      date: incomeDate,
+    );
+
+    try {
+      // Guardar en Firebase primero
+      await guardarIngresoEnFirebase(income);
+
+      // Luego llamar al callback local
+      widget.onAddIncome(income);
+
+      // Reset form
+      setState(() {
+        source = "";
+        amount = "";
+        description = "";
+        incomeDate = DateTime.now();
+        isOpen = false;
+      });
+
+      // Reset controllers
+      _descriptionController.clear();
+      _amountController.clear();
+
+      // Mostrar mensaje de éxito
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Text("Ingreso de \$${income.amount.toStringAsFixed(2)} guardado correctamente"),
+              ],
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      // Mostrar error al usuario
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error al guardar ingreso: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -327,10 +605,10 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                                 const SizedBox(width: 12),
                                 Text(
                                   'Fuente de Ingreso',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.green.shade800,
+                                    color: Color(0xFF2E7D32),
                                   ),
                                 ),
                               ],
@@ -439,13 +717,13 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                                 ),
                               ),
                               child: TextFormField(
+                                controller: _amountController,
                                 keyboardType: TextInputType.number,
-                                initialValue: amount,
                                 onChanged: (value) => setState(() => amount = value),
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.green,
+                                  color: Colors.black,
                                 ),
                                 decoration: InputDecoration(
                                   prefixIcon: Container(
@@ -486,7 +764,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
 
                       const SizedBox(height: 24),
 
-                      // Descripción con diseño mejorado
+                      // Descripción con voz y autocompletado inteligente
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
@@ -508,17 +786,63 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                                   size: 24,
                                 ),
                                 const SizedBox(width: 12),
-                                Text(
-                                  'Descripción',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green.shade800,
+                                Expanded(
+                                  child: Text(
+                                    'Descripción',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF2E7D32),
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: _isProcessingVoice ? null : _listenForIncome,
+                                  icon: Icon(
+                                    _isListening ? Icons.mic_off : Icons.mic,
+                                    color: _isListening ? Colors.red : Colors.blue,
+                                  ),
+                                  tooltip: _isListening ? 'Escuchando...' : 'Hablar para ingresar ingreso',
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: _isListening
+                                        ? Colors.red.withOpacity(0.1)
+                                        : Colors.blue.withOpacity(0.1),
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 16),
+
+                            // Indicador de procesamiento de voz
+                            if (_isProcessingVoice) ...[
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.blue.shade200),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      'Procesando tu voz con IA...',
+                                      style: TextStyle(
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+
                             Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
@@ -528,11 +852,12 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                                 ),
                               ),
                               child: TextFormField(
-                                initialValue: description,
+                                controller: _descriptionController,
                                 onChanged: (value) => setState(() => description = value),
                                 maxLines: 3,
+                                style: const TextStyle(color: Colors.black),
                                 decoration: InputDecoration(
-                                  hintText: '¿De dónde viene este ingreso? (ej: Salario mensual, Freelance, etc.)',
+                                  hintText: '¿De dónde viene este ingreso? (Escribe o habla)',
                                   hintStyle: TextStyle(
                                     color: Colors.grey.shade400,
                                   ),
@@ -650,7 +975,12 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
                                 ),
                               ),
                               child: OutlinedButton(
-                                onPressed: () => setState(() => isOpen = false),
+                                onPressed: () => setState(() {
+                                  isOpen = false;
+                                  // Reset controllers
+                                  _descriptionController.clear();
+                                  _amountController.clear();
+                                }),
                                 style: OutlinedButton.styleFrom(
                                   backgroundColor: Colors.transparent,
                                   side: BorderSide.none,

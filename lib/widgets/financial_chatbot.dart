@@ -1,18 +1,28 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import '../models.dart';
 
-class AIChat extends StatefulWidget {
-  final String initialCategory;
-  final VoidCallback? onClose;
+class FinancialChatbot extends StatefulWidget {
+  final List<Expense> expenses;
+  final List<Income> incomes;
+  final double balance;
+  final double savings;
 
-  const AIChat({super.key, required this.initialCategory, this.onClose});
+  const FinancialChatbot({
+    super.key,
+    required this.expenses,
+    required this.incomes,
+    required this.balance,
+    required this.savings,
+  });
 
   @override
-  State<AIChat> createState() => _AIChatState();
+  State<FinancialChatbot> createState() => _FinancialChatbotState();
 }
 
-class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
+class _FinancialChatbotState extends State<FinancialChatbot> with TickerProviderStateMixin {
   final TextEditingController _messageController = TextEditingController();
   final List<Map<String, dynamic>> _messages = [];
   final ScrollController _scrollController = ScrollController();
@@ -27,7 +37,6 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
   String _speechText = '';
   double _confidence = 1.0;
 
-  // API Key de Gemini
   static const String _apiKey = 'AIzaSyA1tTTe2loIRAAUNnkYIIVhwP0TvTck_Ac';
 
   @override
@@ -40,17 +49,17 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
     _animationController.forward();
 
-    // Inicializar speech-to-text
+    // Initialize speech-to-text
     _speech = stt.SpeechToText();
 
-    // Inicializar modelo de Gemini
+    // Initialize Gemini
     _model = GenerativeModel(
       model: 'gemini-2.5-flash-lite',
       apiKey: _apiKey,
     );
 
-    // Mensaje de bienvenida
-    _addBotMessage('¡Hola! Soy Gemini AI, tu asistente financiero inteligente. ¿En qué puedo ayudarte hoy? 🎙️ También puedes hablar presionando el micrófono.');
+    // Welcome message with financial context
+    _addBotMessage(_getWelcomeMessage());
   }
 
   @override
@@ -61,12 +70,24 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  String _getWelcomeMessage() {
+    final totalExpenses = widget.expenses.fold<double>(0, (sum, e) => sum + e.amount);
+    final totalIncome = widget.incomes.fold<double>(0, (sum, i) => sum + i.amount);
+
+    if (totalExpenses == 0 && totalIncome == 0) {
+      return '¡Hola! Soy tu asistente financiero personal. Veo que aún no has registrado transacciones. ¿Te gustaría que te ayude a comenzar con consejos básicos de ahorro? 💰';
+    }
+
+    return '¡Hola! Soy tu asistente financiero personal. He analizado tus finanzas: tienes \$${widget.balance.toStringAsFixed(2)} en balance y \$${widget.savings.toStringAsFixed(2)} ahorrados. ¿En qué puedo ayudarte hoy? 📊';
+  }
+
   void _addBotMessage(String message) {
     setState(() {
       _messages.add({
         'text': message,
         'isBot': true,
         'timestamp': DateTime.now(),
+        'type': 'text',
       });
     });
     _scrollToBottom();
@@ -78,6 +99,7 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
         'text': message,
         'isBot': false,
         'timestamp': DateTime.now(),
+        'type': 'text',
       });
     });
     _scrollToBottom();
@@ -105,14 +127,161 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
     setState(() => _isTyping = true);
 
     try {
-      final response = await _getGeminiResponse(message);
+      final response = await _getFinancialResponse(message);
       setState(() => _isTyping = false);
       _addBotMessage(response);
     } catch (e) {
       setState(() => _isTyping = false);
       _addBotMessage('Lo siento, tuve un problema conectándome con la IA. ¿Puedes intentar de nuevo?');
-      print('Error en chat IA: $e');
+      print('Error en chatbot financiero: $e');
     }
+  }
+
+  Future<String> _getFinancialResponse(String userMessage) async {
+    try {
+      // Analyze user data for context
+      final financialContext = _buildFinancialContext();
+
+      final prompt = '''
+      Eres Gemini AI, el asistente financiero más avanzado integrado en AhorraMax.
+
+      CONTEXTO FINANCIERO DEL USUARIO:
+      $financialContext
+
+      MENSAJE DEL USUARIO: "$userMessage"
+
+      INSTRUCCIONES:
+      1. Responde de manera específica y personalizada usando los datos financieros del usuario
+      2. Sé útil, motivador y constructivo
+      3. Proporciona consejos accionables basados en sus patrones reales
+      4. Menciona ofertas locales en Quito/Ecuador cuando sea relevante
+      5. Si preguntan sobre gastos específicos, analiza sus datos reales
+      6. Mantén un tono profesional pero amigable
+      7. Si no tienes suficiente contexto, pide más información específica
+
+      TIPOS DE PREGUNTAS COMUNES:
+      - "¿Cuánto gasté en [categoría]?" → Analiza sus gastos reales
+      - "¿Cómo puedo ahorrar más?" → Sugerencias basadas en sus patrones
+      - "¿Cuál es mi gasto promedio?" → Calcula basado en sus datos
+      - "¿Dónde puedo encontrar ofertas?" → Sugiere lugares locales
+
+      Responde de manera natural y conversacional, como un asesor financiero personal.
+      Responde en español.
+      ''';
+
+      final content = [Content.text(prompt)];
+      final response = await _model.generateContent(content).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => throw Exception('Timeout: La respuesta tomó demasiado tiempo'),
+      );
+
+      if (response.text != null && response.text!.trim().isNotEmpty) {
+        return response.text!.trim();
+      } else {
+        return _generateFallbackResponse(userMessage);
+      }
+    } catch (e) {
+      print('Error al conectar con Gemini API: $e');
+      // Check if it's a quota/rate limit error
+      if (e.toString().contains('quota') || e.toString().contains('rate limit') || e.toString().contains('429')) {
+        return 'Lo siento, he alcanzado el límite de uso gratuito de la API. Te recomiendo:\n\n💡 Consejos sin IA:\n• Registra tus gastos regularmente\n• Establece un presupuesto mensual\n• Busca ofertas en supermercados locales\n• Usa transporte público para ahorrar\n\n¿Te gustaría que te ayude con alguna pregunta específica sobre finanzas?';
+      }
+      return _generateFallbackResponse(userMessage);
+    }
+  }
+
+  String _buildFinancialContext() {
+    final totalExpenses = widget.expenses.fold<double>(0, (sum, e) => sum + e.amount);
+    final totalIncome = widget.incomes.fold<double>(0, (sum, i) => sum + i.amount);
+    final netSavings = totalIncome - totalExpenses;
+
+    // Category breakdown
+    final categorySpending = <String, double>{};
+    for (final expense in widget.expenses) {
+      categorySpending[expense.category] = (categorySpending[expense.category] ?? 0) + expense.amount;
+    }
+
+    final sortedCategories = categorySpending.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topCategories = sortedCategories.take(3);
+
+    return '''
+    Balance actual: \$${widget.balance.toStringAsFixed(2)}
+    Ahorros totales: \$${widget.savings.toStringAsFixed(2)}
+    Gastos totales registrados: \$${totalExpenses.toStringAsFixed(2)}
+    Ingresos totales registrados: \$${totalIncome.toStringAsFixed(2)}
+    Ahorro neto: \$${netSavings.toStringAsFixed(2)}
+    Número de transacciones: ${widget.expenses.length + widget.incomes.length}
+    Categorías principales: ${topCategories.map((e) => '${e.key} (\$${e.value.toStringAsFixed(2)})').join(', ')}
+    ''';
+  }
+
+  String _generateFallbackResponse(String userMessage) {
+    final message = userMessage.toLowerCase();
+
+    // Analyze based on available data
+    if (message.contains('cuánto') && message.contains('gast')) {
+      if (message.contains('mes')) {
+        final thisMonth = DateTime.now();
+        final monthlyExpenses = widget.expenses
+            .where((e) => e.date.month == thisMonth.month && e.date.year == thisMonth.year)
+            .fold<double>(0, (sum, e) => sum + e.amount);
+        return 'Este mes has gastado \$${monthlyExpenses.toStringAsFixed(2)}. ¿Te gustaría ver un desglose por categorías?';
+      }
+
+      if (message.contains('hoy')) {
+        final today = DateTime.now();
+        final todayExpenses = widget.expenses
+            .where((e) => e.date.day == today.day && e.date.month == today.month && e.date.year == today.year)
+            .fold<double>(0, (sum, e) => sum + e.amount);
+        return 'Hoy has gastado \$${todayExpenses.toStringAsFixed(2)}. ¡Buen trabajo controlando tus gastos! 💪';
+      }
+
+      final totalExpenses = widget.expenses.fold<double>(0, (sum, e) => sum + e.amount);
+      return 'Has registrado gastos por un total de \$${totalExpenses.toStringAsFixed(2)}. ¿Quieres que analice alguna categoría específica?';
+    }
+
+    if (message.contains('ahorr') || message.contains('saving')) {
+      if (widget.savings > 0) {
+        return '¡Excelente! Ya tienes \$${widget.savings.toStringAsFixed(2)} ahorrados. Te recomiendo continuar con metas pequeñas pero consistentes. ¿Quieres que te ayude a crear una nueva meta?';
+      } else {
+        return 'Aún no tienes ahorros registrados. Te sugiero comenzar con el 10% de tus ingresos. ¿Quieres que te ayude a calcular cuánto podrías ahorrar mensualmente?';
+      }
+    }
+
+    if (message.contains('balance') || message.contains('dinero')) {
+      return 'Tu balance actual es de \$${widget.balance.toStringAsFixed(2)}. Esto incluye tus ingresos menos tus gastos registrados. ¿Te gustaría ver un resumen detallado?';
+    }
+
+    if (message.contains('categoría') || message.contains('category')) {
+      final categories = widget.expenses.map((e) => e.category).toSet().join(', ');
+      return 'Has registrado gastos en estas categorías: $categories. ¿Quieres que analice alguna en particular?';
+    }
+
+    if (message.contains('promedio') || message.contains('average')) {
+      if (widget.expenses.isNotEmpty) {
+        final avgExpense = widget.expenses.fold<double>(0, (sum, e) => sum + e.amount) / widget.expenses.length;
+        return 'Tu gasto promedio por transacción es de \$${avgExpense.toStringAsFixed(2)}. ¿Te gustaría ver cómo se compara con otras categorías?';
+      }
+    }
+
+    if (message.contains('meta') || message.contains('goal')) {
+      return 'Las metas financieras son una excelente manera de mantener la motivación. ¿Quieres que te ayude a crear una nueva meta o revisar tus metas existentes? 🎯';
+    }
+
+    if (message.contains('oferta') || message.contains('descuento')) {
+      return '¡Buena pregunta sobre ofertas! En Quito puedes encontrar descuentos en: • Mi Comisariato (30% en lácteos) • Pizza Hut (2x1 en pizzas) • Ecovía (descuentos en transporte). ¿En qué categoría te interesa? 🏪';
+    }
+
+    // Generic responses
+    final genericResponses = [
+      'Entiendo tu consulta. Basándome en tus finanzas actuales, ¿podrías darme más detalles sobre lo que necesitas? 💭',
+      '¡Buena pregunta! Déjame analizar tus patrones de gasto para darte la mejor respuesta posible.',
+      'Estoy aquí para ayudarte con tus finanzas. ¿Podrías ser más específico sobre qué aspecto te gustaría mejorar?',
+      'Como tu asistente financiero, puedo analizar tus gastos, sugerir ahorros y dar consejos personalizados. ¿Qué te preocupa más ahora?',
+    ];
+
+    return genericResponses[DateTime.now().millisecondsSinceEpoch % genericResponses.length];
   }
 
   void _listen() async {
@@ -124,97 +293,25 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
       if (available) {
         setState(() => _isListening = true);
         _speech.listen(
-          onResult: (val) => setState(() {
-            _speechText = val.recognizedWords;
-            if (val.hasConfidenceRating && val.confidence > 0) {
-              _confidence = val.confidence;
-            }
-            // Auto-fill the text field
-            _messageController.text = _speechText;
-          }),
-          localeId: 'es_ES', // Spanish locale
+          onResult: (val) {
+            setState(() {
+              _speechText = val.recognizedWords;
+              if (val.hasConfidenceRating && val.confidence > 0) {
+                _confidence = val.confidence;
+              }
+              _messageController.text = _speechText;
+            });
+          },
+          localeId: 'es_ES',
         );
       }
     } else {
       setState(() => _isListening = false);
       _speech.stop();
-      // If we have recognized text, send it
       if (_speechText.isNotEmpty) {
         _sendMessage();
       }
     }
-  }
-
-  Future<String> _getGeminiResponse(String userMessage) async {
-    try {
-      // Usar modelo correcto de Gemini
-      final prompt = '''
-Eres Gemini AI, el asistente de IA más avanzado de Google integrado en AhorraMax.
-
-Usuario: "$userMessage"
-
-Responde de manera inteligente, útil y enfocada en finanzas personales. Menciona ofertas locales cuando sea relevante.
-''';
-
-      final content = [Content.text(prompt)];
-      final response = await _model.generateContent(content);
-
-      if (response.text != null && response.text!.isNotEmpty) {
-        return response.text!.trim();
-      } else {
-        return _generateFallbackResponse(userMessage);
-      }
-    } catch (e) {
-      print('Error al conectar con Gemini API: $e');
-      return _generateFallbackResponse(userMessage);
-    }
-  }
-
-  String _generateFallbackResponse(String userMessage) {
-    final message = userMessage.toLowerCase();
-
-    // Respuestas basadas en categorías
-    if (message.contains('comida') || message.contains('restaurante') || message.contains('pizza')) {
-      return '¡Buena elección! Te recomiendo revisar las ofertas de Pizza Hut hoy - tienen 2x1 en pizzas medianas. También puedes cocinar en casa para ahorrar más. ¿Te ayudo con alguna receta económica?';
-    }
-
-    if (message.contains('transporte') || message.contains('bus') || message.contains('taxi')) {
-      return 'Para transporte, considera usar la tarjeta Ecovía - tiene descuentos. Si vas a lugares cercanos, ¡la bicicleta es gratis y saludable! ¿A dónde necesitas ir?';
-    }
-
-    if (message.contains('supermercado') || message.contains('compras') || message.contains('tienda')) {
-      return 'Mi Comisariato tiene 30% descuento en lácteos esta semana. Tía ofrece productos de limpieza con 20% off. ¿Qué necesitas comprar?';
-    }
-
-    if (message.contains('ahorro') || message.contains('dinero') || message.contains('presupuesto')) {
-      return 'Excelente pregunta sobre ahorro. Te sugiero: 1) Establece un presupuesto semanal, 2) Revisa ofertas antes de comprar, 3) Cocina en casa. ¿Quieres que analice tus gastos recientes?';
-    }
-
-    if (message.contains('gasto') || message.contains('cuánto') || message.contains('precio')) {
-      return '📊 Puedo ayudarte a rastrear tus gastos. Registra cada compra en la app y te daré recomendaciones personalizadas. ¿Qué tipo de gasto quieres analizar?';
-    }
-
-    if (message.contains('oferta') || message.contains('descuento') || message.contains('promoción')) {
-      return '🎉 ¡Genial! Hoy tenemos: Pizza Hut 2x1, Mi Comisariato 30% en lácteos, Tía productos de limpieza con descuento. ¿En qué categoría te interesa?';
-    }
-
-    if (message.contains('hola') || message.contains('hi') || message.contains('buenos')) {
-      return '¡Hola! 👋 Soy Gemini AI, el asistente de IA de Google integrado en AhorraMax. Estoy aquí para ayudarte con tus finanzas, recomendaciones de ahorro y ofertas locales. ¿En qué puedo asistirte hoy?';
-    }
-
-    if (message.contains('gracias') || message.contains('thank')) {
-      return '¡De nada! 😊 Estoy aquí para ayudarte a ahorrar y tomar mejores decisiones financieras. ¿Hay algo más en lo que pueda asistirte?';
-    }
-
-    // Respuestas genéricas
-    final genericResponses = [
-      '¡Excelente pregunta! Déjame pensar en la mejor manera de ayudarte con eso. 💭',
-      'Entiendo tu consulta. Basándome en patrones similares, te recomiendo revisar las ofertas locales primero.',
-      'Buena observación. El ahorro inteligente viene de pequeñas decisiones diarias. ¿Quieres que te dé tips específicos?',
-      'Interesante. Puedo analizar tus hábitos de gasto para darte recomendaciones más personalizadas.',
-    ];
-
-    return genericResponses[DateTime.now().millisecondsSinceEpoch % genericResponses.length];
   }
 
   @override
@@ -225,14 +322,14 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
         return Opacity(
           opacity: _fadeAnimation.value,
           child: Container(
-            width: 350,
-            height: 500,
+            width: 380,
+            height: 550,
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withOpacity(0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -275,7 +372,7 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Gemini AI',
+                              'Asistente Financiero',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -292,32 +389,11 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
                           ],
                         ),
                       ),
-                      // Botón de salir más prominente
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: TextButton.icon(
-                          onPressed: widget.onClose ?? () {
-                            // Fallback si no hay callback
-                            Navigator.of(context).pop();
-                          },
-                          icon: const Icon(Icons.close, color: Colors.white, size: 18),
-                          label: const Text(
-                            'Salir',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white.withOpacity(0.2),
                         ),
                       ),
                     ],
@@ -385,7 +461,7 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
                               child: TextField(
                                 controller: _messageController,
                                 decoration: InputDecoration(
-                                  hintText: _isListening ? 'Habla ahora...' : 'Pregunta sobre finanzas...',
+                                  hintText: _isListening ? 'Habla ahora...' : 'Pregunta sobre tus finanzas...',
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(25),
                                     borderSide: BorderSide.none,
@@ -451,7 +527,7 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.7,
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
         decoration: BoxDecoration(
           color: isBot
@@ -494,7 +570,7 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Escribiendo',
+              'Pensando',
               style: TextStyle(
                 color: Theme.of(context).textTheme.bodyLarge?.color,
                 fontSize: 14,

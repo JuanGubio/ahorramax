@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StreakTracker extends StatefulWidget {
-  const StreakTracker({super.key});
+  final bool hasActivityToday;
+
+  const StreakTracker({super.key, this.hasActivityToday = false});
 
   @override
   State<StreakTracker> createState() => _StreakTrackerState();
@@ -28,6 +30,14 @@ class _StreakTrackerState extends State<StreakTracker> with TickerProviderStateM
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
     );
+  }
+
+  @override
+  void didUpdateWidget(StreakTracker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.hasActivityToday && !_trackedToday) {
+      _trackToday();
+    }
   }
 
   @override
@@ -179,54 +189,56 @@ class _StreakTrackerState extends State<StreakTracker> with TickerProviderStateM
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
+                color: _trackedToday ? Colors.green.shade50 : Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade200),
+                border: Border.all(
+                  color: _trackedToday ? Colors.green.shade200 : Colors.orange.shade200,
+                ),
               ),
               child: Column(
                 children: [
-                  Text(
-                    'Días totales rastreados: $_totalDaysTracked',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  Row(
+                    children: [
+                      Icon(
+                        _trackedToday ? Icons.check_circle : Icons.schedule,
+                        color: _trackedToday ? Colors.green.shade700 : Colors.orange.shade700,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _trackedToday ? '¡Racha activa hoy!' : 'Racha pendiente',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: _trackedToday ? Colors.green.shade700 : Colors.orange.shade700,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Text(
                     _trackedToday
-                        ? '¡Ya registraste hoy!'
-                        : '¿Registraste algún gasto o ingreso hoy?',
+                        ? 'Has registrado actividad financiera hoy. ¡Tu racha continúa!'
+                        : 'Registra un gasto o ingreso hoy para mantener tu racha',
                     style: TextStyle(
                       fontSize: 14,
-                      color: _trackedToday ? Colors.green.shade700 : Colors.grey.shade600,
-                      fontWeight: _trackedToday ? FontWeight.bold : FontWeight.normal,
+                      color: _trackedToday ? Colors.green.shade600 : Colors.orange.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Días totales activos: $_totalDaysTracked',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _trackedToday ? null : _trackToday,
-                icon: Icon(_trackedToday ? Icons.check_circle : Icons.track_changes),
-                label: Text(_trackedToday ? '¡Ya registrado hoy!' : 'Registrar Día de Hoy'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _trackedToday ? Colors.green : Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: _trackedToday ? 0 : 4,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
             Text(
-              'Mantén tu racha registrando gastos e ingresos diariamente',
+              '💪 Tu racha se mantiene automáticamente cuando registras transacciones diarias',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey.shade600,

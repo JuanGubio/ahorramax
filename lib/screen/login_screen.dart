@@ -148,8 +148,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
+                        style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w500),
                         decoration: InputDecoration(
+                          hintText: "tu@email.com",
+                          hintStyle: const TextStyle(color: Colors.grey, fontSize: 16),
                           labelText: "Correo electrónico",
+                          labelStyle: const TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w500),
                           prefixIcon: const Icon(Icons.email, color: Colors.grey),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -161,10 +165,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFF2ECC71)),
+                            borderSide: const BorderSide(color: Color(0xFF2ECC71), width: 2),
                           ),
                           filled: true,
-                          fillColor: Colors.grey.shade50,
+                          fillColor: Colors.white,
                         ),
                       ),
 
@@ -173,8 +177,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextFormField(
                         controller: _passwordController,
                         obscureText: true,
+                        style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w500),
                         decoration: InputDecoration(
+                          hintText: "Tu contraseña",
+                          hintStyle: const TextStyle(color: Colors.grey, fontSize: 16),
                           labelText: "Contraseña",
+                          labelStyle: const TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w500),
                           prefixIcon: const Icon(Icons.lock, color: Colors.grey),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -186,10 +194,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFF2ECC71)),
+                            borderSide: const BorderSide(color: Color(0xFF2ECC71), width: 2),
                           ),
                           filled: true,
-                          fillColor: Colors.grey.shade50,
+                          fillColor: Colors.white,
                         ),
                       ),
 

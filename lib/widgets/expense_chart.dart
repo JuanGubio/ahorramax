@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../screens/dashboard_screen.dart';
+import '../models.dart';
 
 class ExpenseChart extends StatelessWidget {
   final List<Expense> expenses;
