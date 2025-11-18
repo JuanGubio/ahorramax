@@ -203,28 +203,31 @@ class _FinancialGoalsWidgetState extends State<FinancialGoalsWidget> {
                         // Botón de agregar más prominente
                         Container(
                           width: double.infinity,
+                          padding: const EdgeInsets.all(8),
                           child: ElevatedButton.icon(
                             onPressed: _showCreateGoalDialog,
-                            icon: const Icon(Icons.add, size: 24),
-                            label: Text(
-                              'Nueva Meta',
+                            icon: const Icon(Icons.add, size: 28, color: Colors.white),
+                            label: const Text(
+                              'NUEVA META',
                               style: TextStyle(
-                                fontSize: isSmallScreen ? 14 : 16,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
                               ),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white.withOpacity(0.9),
-                              foregroundColor: Colors.purple,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isSmallScreen ? 16 : 24,
-                                vertical: isSmallScreen ? 12 : 16,
+                              backgroundColor: Colors.purple.shade600,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 16,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                              elevation: 4,
-                              shadowColor: Colors.white.withOpacity(0.3),
+                              elevation: 8,
+                              shadowColor: Colors.purple.withOpacity(0.5),
+                              minimumSize: const Size(double.infinity, 56),
                             ),
                           ),
                         ),
