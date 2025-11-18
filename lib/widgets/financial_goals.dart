@@ -644,8 +644,7 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500),
-        padding: const EdgeInsets.all(24),
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -656,208 +655,424 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
               const Color(0xFFFFF6EA),
             ],
           ),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+              blurRadius: 25,
+              offset: const Offset(0, 12),
+            ),
+            BoxShadow(
+              color: Colors.white.withOpacity(0.8),
+              blurRadius: 15,
+              offset: const Offset(0, -5),
             ),
           ],
         ),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Header
                   Container(
-                    width: 40,
-                    height: 40,
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF2ECC71), Color(0xFF4FA3FF)],
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF2ECC71).withOpacity(0.1),
+                          const Color(0xFF4FA3FF).withOpacity(0.1),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Icon(Icons.flag, color: Colors.white),
-                  ),
-                  const SizedBox(width: 12),
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [Color(0xFF2ECC71), Color(0xFF4FA3FF)],
-                    ).createShader(bounds),
-                    child: const Text(
-                      'Nueva Meta Financiera',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      border: Border.all(
+                        color: const Color(0xFF2ECC71).withOpacity(0.2),
+                        width: 1,
                       ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF2ECC71), Color(0xFF4FA3FF)],
+                            ),
+                            borderRadius: BorderRadius.circular(25),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF2ECC71).withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.flag, color: Colors.white, size: 28),
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ShaderMask(
+                              shaderCallback: (bounds) => const LinearGradient(
+                                colors: [Color(0xFF2ECC71), Color(0xFF4FA3FF)],
+                              ).createShader(bounds),
+                              child: const Text(
+                                'Nueva Meta Financiera',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Define tu objetivo de ahorro',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+
+                  // Form Fields in Cards
+                  _buildFormFieldCard(
+                    icon: Icons.title,
+                    iconColor: const Color(0xFF2ECC71),
+                    child: TextFormField(
+                      controller: _titleController,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Título de la meta',
+                        hintText: 'Ej: Comprar un carro',
+                        hintStyle: TextStyle(color: Colors.grey[400]),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingresa un título';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  _buildFormFieldCard(
+                    icon: Icons.description,
+                    iconColor: const Color(0xFF4FA3FF),
+                    child: TextFormField(
+                      controller: _descriptionController,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Descripción (opcional)',
+                        hintText: 'Detalles adicionales de tu meta',
+                        hintStyle: TextStyle(color: Colors.grey[400]),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      maxLines: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  _buildFormFieldCard(
+                    icon: Icons.attach_money,
+                    iconColor: const Color(0xFF00C853),
+                    child: TextFormField(
+                      controller: _targetAmountController,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Monto objetivo',
+                        hintText: 'Ej: 5000.00',
+                        hintStyle: TextStyle(color: Colors.grey[400]),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                        prefixIcon: Container(
+                          margin: const EdgeInsets.only(right: 12),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00C853).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            '\$',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF00C853),
+                            ),
+                          ),
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingresa un monto';
+                        }
+                        final amount = double.tryParse(value.replaceAll(',', '.'));
+                        if (amount == null || amount <= 0) {
+                          return 'Ingresa un monto válido mayor a 0';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Dropdowns in Cards
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildFormFieldCard(
+                          icon: Icons.category,
+                          iconColor: const Color(0xFF9C27B0),
+                          child: DropdownButtonFormField<GoalType>(
+                            value: _selectedType,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: 'Tipo de meta',
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            items: GoalType.values.map((type) {
+                              return DropdownMenuItem(
+                                value: type,
+                                child: Text(_getGoalTypeText(type)),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() => _selectedType = value!);
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildFormFieldCard(
+                          icon: Icons.schedule,
+                          iconColor: const Color(0xFFFF9800),
+                          child: DropdownButtonFormField<GoalPeriod>(
+                            value: _selectedPeriod,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: 'Período',
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            items: GoalPeriod.values.map((period) {
+                              return DropdownMenuItem(
+                                value: period,
+                                child: Text(_getGoalPeriodText(period)),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() => _selectedPeriod = value!);
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Date Picker
+                  _buildFormFieldCard(
+                    icon: Icons.calendar_today,
+                    iconColor: const Color(0xFF795548),
+                    child: InkWell(
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now().add(const Duration(days: 30)),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+                        );
+                        if (date != null) {
+                          setState(() => _targetDate = date);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Fecha objetivo (opcional)',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _targetDate != null
+                                        ? '${_targetDate!.day}/${_targetDate!.month}/${_targetDate!.year}'
+                                        : 'Seleccionar fecha',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: _targetDate != null ? Colors.black87 : Colors.grey[400],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_drop_down,
+                              color: Colors.grey[400],
+                              size: 24,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Buttons
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.grey.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFF2ECC71), width: 2),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: Colors.white,
+                            ),
+                            child: const Text(
+                              'Cancelar',
+                              style: TextStyle(
+                                color: Color(0xFF2ECC71),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _submitForm,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2ECC71),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              elevation: 4,
+                              shadowColor: const Color(0xFF2ECC71).withOpacity(0.3),
+                            ),
+                            child: const Text(
+                              'Crear Meta',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Título de la meta',
-                  hintText: 'Ej: Comprar un carro',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa un título';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Descripción (opcional)',
-                  hintText: 'Detalles adicionales de tu meta',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _targetAmountController,
-                decoration: const InputDecoration(
-                  labelText: 'Monto objetivo',
-                  hintText: 'Ej: 5000.00',
-                  border: OutlineInputBorder(),
-                  prefixText: '\$',
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa un monto';
-                  }
-                  final amount = double.tryParse(value.replaceAll(',', '.'));
-                  if (amount == null || amount <= 0) {
-                    return 'Ingresa un monto válido mayor a 0';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              DropdownButtonFormField<GoalType>(
-                value: _selectedType,
-                decoration: const InputDecoration(
-                  labelText: 'Tipo de meta',
-                  border: OutlineInputBorder(),
-                ),
-                items: GoalType.values.map((type) {
-                  return DropdownMenuItem(
-                    value: type,
-                    child: Text(_getGoalTypeText(type)),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() => _selectedType = value!);
-                },
-              ),
-              const SizedBox(height: 16),
-
-              DropdownButtonFormField<GoalPeriod>(
-                value: _selectedPeriod,
-                decoration: const InputDecoration(
-                  labelText: 'Período',
-                  border: OutlineInputBorder(),
-                ),
-                items: GoalPeriod.values.map((period) {
-                  return DropdownMenuItem(
-                    value: period,
-                    child: Text(_getGoalPeriodText(period)),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() => _selectedPeriod = value!);
-                },
-              ),
-              const SizedBox(height: 16),
-
-              InkWell(
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now().add(const Duration(days: 30)),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
-                  );
-                  if (date != null) {
-                    setState(() => _targetDate = date);
-                  }
-                },
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Fecha objetivo (opcional)',
-                    border: OutlineInputBorder(),
-                  ),
-                  child: Text(
-                    _targetDate != null
-                        ? '${_targetDate!.day}/${_targetDate!.month}/${_targetDate!.year}'
-                        : 'Seleccionar fecha',
-                    style: TextStyle(
-                      color: _targetDate != null ? null : Colors.grey,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFF2ECC71)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: const Text(
-                        'Cancelar',
-                        style: TextStyle(color: Color(0xFF2ECC71)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _submitForm,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2ECC71),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: const Text('Crear Meta'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFormFieldCard({required IconData icon, required Color iconColor, required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.grey.withOpacity(0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: iconColor,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(child: child),
+        ],
       ),
     );
   }

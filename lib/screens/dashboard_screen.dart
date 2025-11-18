@@ -666,6 +666,52 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     return num.toStringAsFixed(2);
   }
 
+  Widget _buildEmptyState(String title, String subtitle, IconData icon, Color color) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  color.withOpacity(0.2),
+                  color.withOpacity(0.1),
+                ],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: 48,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.titleLarge?.color,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -1243,71 +1289,237 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                       WeeklyInsights(expenses: userExpenses, incomes: incomes),
                       const SizedBox(height: 16),
 
-                      // Transaction History Tabs
-                      DefaultTabController(
-                        length: 2,
-                        child: Column(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).cardColor,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Theme.of(context).dividerColor,
-                                  width: 1,
-                                ),
-                              ),
-                              child: TabBar(
-                                indicator: BoxDecoration(
-                                  color: Theme.of(context).primaryColor,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                labelColor: Colors.white,
-                                unselectedLabelColor: Theme.of(context).textTheme.bodyLarge?.color,
-                                tabs: const [
-                                  Tab(
-                                    icon: Icon(Icons.trending_down),
-                                    text: 'Gastos',
-                                  ),
-                                  Tab(
-                                    icon: Icon(Icons.trending_up),
-                                    text: 'Ingresos',
-                                  ),
-                                ],
-                              ),
+                      // Transaction History Tabs - Improved Design
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).cardColor,
+                              Theme.of(context).cardColor.withOpacity(0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.black38
+                                  : Colors.grey.withOpacity(0.2),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
                             ),
-                            const SizedBox(height: 16),
-                            SizedBox(
-                              height: 400, // Fixed height for tab content
-                              child: TabBarView(
-                                children: [
-                                  // Expenses Tab
-                                  SingleChildScrollView(
-                                    child: Column(
-                                      children: [
-                                        ExpenseList(
-                                          expenses: userExpenses,
-                                          onDeleteExpense: _handleDeleteExpense,
-                                        ),
-                                        const SizedBox(height: 16),
-                                        FinancialOverviewChart(
-                                          expenses: userExpenses,
-                                          incomes: incomes,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  // Incomes Tab
-                                  SingleChildScrollView(
-                                    child: IncomeList(
-                                      incomes: incomes,
-                                      onDeleteIncome: _handleDeleteIncome,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            BoxShadow(
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.black26
+                                  : Colors.white.withOpacity(0.8),
+                              blurRadius: 10,
+                              offset: const Offset(0, -5),
                             ),
                           ],
+                        ),
+                        child: DefaultTabController(
+                          length: 2,
+                          child: Column(
+                            children: [
+                              // Header with title
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Theme.of(context).primaryColor.withOpacity(0.1),
+                                      Theme.of(context).primaryColor.withOpacity(0.05),
+                                    ],
+                                  ),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(24),
+                                    topRight: Radius.circular(24),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Theme.of(context).primaryColor,
+                                            Theme.of(context).primaryColor.withOpacity(0.8),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: const Icon(
+                                        Icons.receipt_long,
+                                        color: Colors.white,
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Historial de Transacciones',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context).textTheme.titleLarge?.color,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            '${userExpenses.length + incomes.length} transacciones registradas',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Tab Bar
+                              Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.grey[850]
+                                      : Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: TabBar(
+                                  indicator: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Theme.of(context).primaryColor,
+                                        Theme.of(context).primaryColor.withOpacity(0.8),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Theme.of(context).primaryColor.withOpacity(0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  labelColor: Colors.white,
+                                  unselectedLabelColor: Theme.of(context).textTheme.bodyLarge?.color,
+                                  labelStyle: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                  unselectedLabelStyle: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(vertical: 4),
+                                  tabs: [
+                                    Tab(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.trending_down,
+                                            size: MediaQuery.of(context).size.width < 360 ? 18 : 20,
+                                          ),
+                                          SizedBox(width: MediaQuery.of(context).size.width < 360 ? 4 : 8),
+                                          Text(
+                                            'Gastos',
+                                            style: TextStyle(
+                                              fontSize: MediaQuery.of(context).size.width < 360 ? 12 : 14,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Tab(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.trending_up,
+                                            size: MediaQuery.of(context).size.width < 360 ? 18 : 20,
+                                          ),
+                                          SizedBox(width: MediaQuery.of(context).size.width < 360 ? 4 : 8),
+                                          Text(
+                                            'Ingresos',
+                                            style: TextStyle(
+                                              fontSize: MediaQuery.of(context).size.width < 360 ? 12 : 14,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Tab Content
+                              Container(
+                                constraints: BoxConstraints(
+                                  maxHeight: MediaQuery.of(context).size.height * 0.6,
+                                  minHeight: 250,
+                                ),
+                                child: TabBarView(
+                                  children: [
+                                    // Expenses Tab
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                                      child: userExpenses.isEmpty
+                                          ? _buildEmptyState(
+                                              'No hay gastos registrados',
+                                              'Registra tu primer gasto para comenzar a trackear tus finanzas',
+                                              Icons.receipt,
+                                              Colors.red,
+                                            )
+                                          : SingleChildScrollView(
+                                              child: Column(
+                                                children: [
+                                                  ExpenseList(
+                                                    expenses: userExpenses,
+                                                    onDeleteExpense: _handleDeleteExpense,
+                                                  ),
+                                                  const SizedBox(height: 20),
+                                                  FinancialOverviewChart(
+                                                    expenses: userExpenses,
+                                                    incomes: incomes,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                    ),
+
+                                    // Incomes Tab
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                                      child: incomes.isEmpty
+                                          ? _buildEmptyState(
+                                              'No hay ingresos registrados',
+                                              'Registra tus ingresos para tener un mejor control financiero',
+                                              Icons.trending_up,
+                                              Colors.green,
+                                            )
+                                          : SingleChildScrollView(
+                                              child: IncomeList(
+                                                incomes: incomes,
+                                                onDeleteIncome: _handleDeleteIncome,
+                                              ),
+                                            ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
 
