@@ -393,7 +393,6 @@ class GoalCard extends StatelessWidget {
                 ),
               ],
             ),
-
             if (goal.remainingAmount > 0) ...[
               const SizedBox(height: 12),
               Container(
@@ -423,7 +422,6 @@ class GoalCard extends StatelessWidget {
                   ),
               ),
             ],
-            ,
 
             if (goal.daysRemaining > 0) ...[
               const SizedBox(height: 8),
@@ -499,13 +497,13 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
           maxHeight: MediaQuery.of(context).size.height * 0.8,
         ),
         padding: const EdgeInsets.all(24),
-        child: SingleChildScrollView(
-          child: Form(
+        child: Form(
           key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               Row(
                 children: [
                   Container(
@@ -720,7 +718,6 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                   ),
                 ),
               ),
-              ,
 
               const SizedBox(height: 24),
 
