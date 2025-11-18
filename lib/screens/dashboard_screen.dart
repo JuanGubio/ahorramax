@@ -851,58 +851,71 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                   child: SafeArea(
                     child: Column(
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF2ECC71), Color(0xFF4FA3FF)],
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final screenWidth = MediaQuery.of(context).size.width;
+                            final isVerySmallScreen = screenWidth < 360;
+
+                            return Row(
+                              children: [
+                                Container(
+                                  width: isVerySmallScreen ? 32 : 40,
+                                  height: isVerySmallScreen ? 32 : 40,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFF2ECC71), Color(0xFF4FA3FF)],
+                                    ),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Icon(Icons.attach_money, color: Colors.white, size: isVerySmallScreen ? 16 : 20),
                                 ),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Icon(Icons.attach_money, color: Colors.white),
-                            ),
-                            const SizedBox(width: 12),
-                            ShaderMask(
-                              shaderCallback: (bounds) => const LinearGradient(
-                                colors: [Color(0xFF2ECC71), Color(0xFF4FA3FF)],
-                              ).createShader(bounds),
-                              child: const Text(
-                                'AhorraMax',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: ShaderMask(
+                                    shaderCallback: (bounds) => const LinearGradient(
+                                      colors: [Color(0xFF2ECC71), Color(0xFF4FA3FF)],
+                                    ).createShader(bounds),
+                                    child: Text(
+                                      'AhorraMax',
+                                      style: TextStyle(
+                                        fontSize: isVerySmallScreen ? 16 : 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                            const Spacer(),
-                            IconButton(
-                              onPressed: () => setState(() => showNavBar = !showNavBar),
-                              icon: const Icon(Icons.search),
-                            ),
-                            IconButton(
-                              onPressed: widget.toggleTheme,
-                              icon: Icon(
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Icons.light_mode
-                                    : Icons.dark_mode,
-                                color: Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () => Navigator.pushNamed(context, '/profile'),
-                              child: CircleAvatar(
-                                radius: 18,
-                                backgroundColor: Theme.of(context).primaryColor,
-                                child: const Text('MG', style: TextStyle(color: Colors.white)),
-                              ),
-                            ),
-                          ],
+                                if (!isVerySmallScreen) ...[
+                                  IconButton(
+                                    onPressed: () => setState(() => showNavBar = !showNavBar),
+                                    icon: const Icon(Icons.search),
+                                    iconSize: 20,
+                                  ),
+                                  IconButton(
+                                    onPressed: widget.toggleTheme,
+                                    icon: Icon(
+                                      Theme.of(context).brightness == Brightness.dark
+                                          ? Icons.light_mode
+                                          : Icons.dark_mode,
+                                      color: Theme.of(context).brightness == Brightness.dark
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
+                                    iconSize: 20,
+                                  ),
+                                ],
+                                GestureDetector(
+                                  onTap: () => Navigator.pushNamed(context, '/profile'),
+                                  child: CircleAvatar(
+                                    radius: isVerySmallScreen ? 14 : 18,
+                                    backgroundColor: Theme.of(context).primaryColor,
+                                    child: Text('MG', style: TextStyle(color: Colors.white, fontSize: isVerySmallScreen ? 10 : 12)),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
 
                         // Navigation Bar
@@ -1036,126 +1049,143 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             ),
                             const SizedBox(height: 20),
 
-                            // Estadísticas en fila
-                            Row(
-                              children: [
-                                // Gastos del día
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: Colors.red.withOpacity(0.2),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
+                            // Estadísticas en fila - Responsive
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                final screenWidth = MediaQuery.of(context).size.width;
+                                final isSmallScreen = screenWidth < 360;
+                                final cardPadding = isSmallScreen ? 12.0 : 16.0;
+                                final iconSize = isSmallScreen ? 14.0 : 16.0;
+                                final titleFontSize = isSmallScreen ? 11.0 : 12.0;
+                                final amountFontSize = isSmallScreen ? 16.0 : 18.0;
+
+                                return Row(
+                                  children: [
+                                    // Gastos del día
+                                    Expanded(
+                                      child: Container(
+                                        padding: EdgeInsets.all(cardPadding),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: Colors.red.withOpacity(0.2),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Icon(
-                                              Icons.trending_down,
-                                              color: Colors.red[600],
-                                              size: 16,
+                                            Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.trending_down,
+                                                  color: Colors.red[600],
+                                                  size: iconSize,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  'Gastos',
+                                                  style: TextStyle(
+                                                    fontSize: titleFontSize,
+                                                    color: Colors.red[600],
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              'Gastos',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.red[600],
-                                                fontWeight: FontWeight.w600,
-                                              ),
+                                            SizedBox(height: isSmallScreen ? 4 : 8),
+                                            Builder(
+                                              builder: (context) {
+                                                final now = DateTime.now();
+                                                final dayExpenses = userExpenses.where((expense) =>
+                                                  expense.date.year == now.year &&
+                                                  expense.date.month == now.month &&
+                                                  expense.date.day == now.day
+                                                ).fold<double>(0, (sum, expense) => sum + expense.amount);
+
+                                                return FittedBox(
+                                                  fit: BoxFit.scaleDown,
+                                                  child: Text(
+                                                    '-\$${dayExpenses.toStringAsFixed(2)}',
+                                                    style: TextStyle(
+                                                      fontSize: amountFontSize,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.red,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 8),
-                                        Builder(
-                                          builder: (context) {
-                                            final now = DateTime.now();
-                                            final dayExpenses = userExpenses.where((expense) =>
-                                              expense.date.year == now.year &&
-                                              expense.date.month == now.month &&
-                                              expense.date.day == now.day
-                                            ).fold<double>(0, (sum, expense) => sum + expense.amount);
-
-                                            return Text(
-                                              '-\$${dayExpenses.toStringAsFixed(2)}',
-                                              style: const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.red,
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-
-                                // Ingresos del día
-                                Expanded(
-                                  child: Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: Colors.green.withOpacity(0.2),
-                                        width: 1,
                                       ),
                                     ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
+                                    SizedBox(width: isSmallScreen ? 8 : 12),
+
+                                    // Ingresos del día
+                                    Expanded(
+                                      child: Container(
+                                        padding: EdgeInsets.all(cardPadding),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: Colors.green.withOpacity(0.2),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Icon(
-                                              Icons.trending_up,
-                                              color: Colors.green[600],
-                                              size: 16,
+                                            Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.trending_up,
+                                                  color: Colors.green[600],
+                                                  size: iconSize,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  'Ingresos',
+                                                  style: TextStyle(
+                                                    fontSize: titleFontSize,
+                                                    color: Colors.green[600],
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              'Ingresos',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.green[600],
-                                                fontWeight: FontWeight.w600,
-                                              ),
+                                            SizedBox(height: isSmallScreen ? 4 : 8),
+                                            Builder(
+                                              builder: (context) {
+                                                final now = DateTime.now();
+                                                final dayIncomes = incomes.where((income) =>
+                                                  income.date.year == now.year &&
+                                                  income.date.month == now.month &&
+                                                  income.date.day == now.day
+                                                ).fold<double>(0, (sum, income) => sum + income.amount);
+
+                                                return FittedBox(
+                                                  fit: BoxFit.scaleDown,
+                                                  child: Text(
+                                                    '+\$${dayIncomes.toStringAsFixed(2)}',
+                                                    style: TextStyle(
+                                                      fontSize: amountFontSize,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.green,
+                                                    ),
+                                                  ),
+                                                );
+                                              },
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 8),
-                                        Builder(
-                                          builder: (context) {
-                                            final now = DateTime.now();
-                                            final dayIncomes = incomes.where((income) =>
-                                              income.date.year == now.year &&
-                                              income.date.month == now.month &&
-                                              income.date.day == now.day
-                                            ).fold<double>(0, (sum, income) => sum + income.amount);
-
-                                            return Text(
-                                              '+\$${dayIncomes.toStringAsFixed(2)}',
-                                              style: const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.green,
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              ],
+                                  ],
+                                );
+                              },
                             ),
 
                             const SizedBox(height: 16),
@@ -1252,251 +1282,296 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                       const SizedBox(height: 24),
 
 
-                      // Balance Cards
-                      GridView.count(
-                        crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: [
-                          // Balance Card
-                          Card(
-                            elevation: 8,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Colors.green, Color(0xFF2E7D32)],
+                      // Balance Cards - Responsive Design
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final screenWidth = MediaQuery.of(context).size.width;
+                          final isSmallScreen = screenWidth < 360;
+                          final crossAxisCount = screenWidth > 600 ? 4 : 2;
+                          final cardPadding = isSmallScreen ? 12.0 : 20.0;
+                          final titleFontSize = isSmallScreen ? 12.0 : 14.0;
+                          final amountFontSize = isSmallScreen ? 20.0 : 28.0;
+                          final subtitleFontSize = isSmallScreen ? 10.0 : 12.0;
+
+                          return GridView.count(
+                            crossAxisCount: crossAxisCount,
+                            crossAxisSpacing: isSmallScreen ? 8 : 16,
+                            mainAxisSpacing: isSmallScreen ? 8 : 16,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            children: [
+                              // Balance Card
+                              Card(
+                                elevation: 8,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                child: Container(
+                                  padding: EdgeInsets.all(cardPadding),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Colors.green, Color(0xFF2E7D32)],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: const Icon(Icons.account_balance_wallet, color: Colors.white),
-                                      ),
                                       Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          IconButton(
-                                            onPressed: () => setState(() => showAddMoney = true),
-                                            icon: const Icon(Icons.add, color: Colors.white),
-                                            style: IconButton.styleFrom(
-                                              backgroundColor: Colors.white.withOpacity(0.2),
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(0.2),
+                                              borderRadius: BorderRadius.circular(12),
                                             ),
+                                            child: Icon(Icons.account_balance_wallet, color: Colors.white, size: isSmallScreen ? 16 : 20),
                                           ),
-                                          IconButton(
-                                            onPressed: () => setState(() => showResetConfirm = true),
-                                            icon: const Icon(Icons.refresh, color: Colors.white),
-                                            style: IconButton.styleFrom(
-                                              backgroundColor: Colors.white.withOpacity(0.2),
-                                            ),
+                                          if (!isSmallScreen) Row(
+                                            children: [
+                                              IconButton(
+                                                onPressed: () => setState(() => showAddMoney = true),
+                                                icon: const Icon(Icons.add, color: Colors.white),
+                                                iconSize: 18,
+                                                style: IconButton.styleFrom(
+                                                  backgroundColor: Colors.white.withOpacity(0.2),
+                                                  padding: const EdgeInsets.all(6),
+                                                ),
+                                              ),
+                                              IconButton(
+                                                onPressed: () => setState(() => showResetConfirm = true),
+                                                icon: const Icon(Icons.refresh, color: Colors.white),
+                                                iconSize: 18,
+                                                style: IconButton.styleFrom(
+                                                  backgroundColor: Colors.white.withOpacity(0.2),
+                                                  padding: const EdgeInsets.all(6),
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  const Text(
-                                    'Dinero Actual',
-                                    style: TextStyle(color: Colors.white70, fontSize: 14),
-                                  ),
-                                  Text(
-                                    '\$${_formatLargeNumber(balance)}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          // Income Card
-                          Card(
-                            elevation: 8,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Colors.teal, Colors.greenAccent],
-                                ),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: const Icon(Icons.trending_up, color: Colors.white),
+                                      SizedBox(height: isSmallScreen ? 8 : 16),
+                                      Text(
+                                        'Dinero Actual',
+                                        style: TextStyle(color: Colors.white70, fontSize: titleFontSize),
                                       ),
-                                      const Icon(Icons.arrow_upward, color: Colors.white70),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  const Text(
-                                    'Ingresos del Mes',
-                                    style: TextStyle(color: Colors.white70, fontSize: 14),
-                                  ),
-                                  Text(
-                                    '\$${incomes.fold<double>(0, (sum, income) => sum + income.amount).toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const Text(
-                                    'Total recibido',
-                                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          // Expenses Card
-                          Card(
-                            elevation: 8,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Colors.red, Colors.redAccent],
-                                ),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(12),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          '\$${_formatLargeNumber(balance)}',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: amountFontSize,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
-                                        child: const Icon(Icons.credit_card, color: Colors.white),
                                       ),
-                                      const Icon(Icons.trending_down, color: Colors.white70),
                                     ],
                                   ),
-                                  const SizedBox(height: 16),
-                                  const Text(
-                                    'Gastos del Mes',
-                                    style: TextStyle(color: Colors.white70, fontSize: 14),
-                                  ),
-                                  Text(
-                                    '\$${monthlyExpenses.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const Text(
-                                    'Haz clic para ver detalles',
-                                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-
-                          // Savings Card
-                          Card(
-                            elevation: 8,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Colors.blue, Colors.indigo],
                                 ),
-                                borderRadius: BorderRadius.circular(16),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                              // Income Card
+                              Card(
+                                elevation: 8,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Container(
+                                  padding: EdgeInsets.all(cardPadding),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Colors.teal, Colors.greenAccent],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: const Icon(Icons.savings, color: Colors.white),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(0.2),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Icon(Icons.trending_up, color: Colors.white, size: isSmallScreen ? 16 : 20),
+                                          ),
+                                          Icon(Icons.arrow_upward, color: Colors.white70, size: isSmallScreen ? 16 : 20),
+                                        ],
                                       ),
-                                      const Icon(Icons.trending_up, color: Colors.white70),
+                                      SizedBox(height: isSmallScreen ? 8 : 16),
+                                      Text(
+                                        'Ingresos del Mes',
+                                        style: TextStyle(color: Colors.white70, fontSize: titleFontSize),
+                                      ),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          '\$${incomes.fold<double>(0, (sum, income) => sum + income.amount).toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: amountFontSize,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      if (!isSmallScreen) Text(
+                                        'Total recibido',
+                                        style: TextStyle(color: Colors.white70, fontSize: subtitleFontSize),
+                                      ),
                                     ],
                                   ),
-                                  const SizedBox(height: 16),
-                                  const Text(
-                                    'Ahorros Totales',
-                                    style: TextStyle(color: Colors.white70, fontSize: 14),
-                                  ),
-                                  Text(
-                                    '\$${savings.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
-                        ],
+
+                              // Expenses Card
+                              Card(
+                                elevation: 8,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Container(
+                                  padding: EdgeInsets.all(cardPadding),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Colors.red, Colors.redAccent],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(0.2),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Icon(Icons.credit_card, color: Colors.white, size: isSmallScreen ? 16 : 20),
+                                          ),
+                                          Icon(Icons.trending_down, color: Colors.white70, size: isSmallScreen ? 16 : 20),
+                                        ],
+                                      ),
+                                      SizedBox(height: isSmallScreen ? 8 : 16),
+                                      Text(
+                                        'Gastos del Mes',
+                                        style: TextStyle(color: Colors.white70, fontSize: titleFontSize),
+                                      ),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          '\$${monthlyExpenses.toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: amountFontSize,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      if (!isSmallScreen) Text(
+                                        'Haz clic para ver detalles',
+                                        style: TextStyle(color: Colors.white70, fontSize: subtitleFontSize),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                              // Savings Card
+                              Card(
+                                elevation: 8,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Container(
+                                  padding: EdgeInsets.all(cardPadding),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Colors.blue, Colors.indigo],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white.withOpacity(0.2),
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Icon(Icons.savings, color: Colors.white, size: isSmallScreen ? 16 : 20),
+                                          ),
+                                          Icon(Icons.trending_up, color: Colors.white70, size: isSmallScreen ? 16 : 20),
+                                        ],
+                                      ),
+                                      SizedBox(height: isSmallScreen ? 8 : 16),
+                                      Text(
+                                        'Ahorros Totales',
+                                        style: TextStyle(color: Colors.white70, fontSize: titleFontSize),
+                                      ),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          '\$${savings.toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: amountFontSize,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
 
                       const SizedBox(height: 24),
 
 
-                      // Forms
-                      Row(
-                        children: [
-                          Expanded(
-                            child: AddExpenseForm(onAddExpense: _handleAddExpense),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: AddIncomeForm(onAddIncome: _handleAddIncome),
-                          ),
-                        ],
+                      // Forms - Responsive Layout
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final screenWidth = MediaQuery.of(context).size.width;
+                          final isSmallScreen = screenWidth < 600;
+
+                          if (isSmallScreen) {
+                            return Column(
+                              children: [
+                                AddExpenseForm(onAddExpense: _handleAddExpense),
+                                const SizedBox(height: 16),
+                                AddIncomeForm(onAddIncome: _handleAddIncome),
+                              ],
+                            );
+                          } else {
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: AddExpenseForm(onAddExpense: _handleAddExpense),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: AddIncomeForm(onAddIncome: _handleAddIncome),
+                                ),
+                              ],
+                            );
+                          }
+                        },
                       ),
 
                       const SizedBox(height: 24),

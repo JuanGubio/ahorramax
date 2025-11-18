@@ -228,7 +228,12 @@ class _SmartAutocompleteState extends State<SmartAutocomplete> {
                 final suggestion = _suggestions[index];
                 return InkWell(
                   onTap: () {
+                    // Update the controller text first
+                    widget.controller?.text = suggestion;
+                    // Then call the suggestion selected callback
                     widget.onSuggestionSelected(suggestion);
+                    // Finally trigger onChanged if provided to ensure consistency
+                    widget.onChanged?.call(suggestion);
                     _removeOverlay();
                   },
                   child: Container(

@@ -834,6 +834,11 @@ Reglas:
                             description = suggestion;
                             _descriptionController.text = suggestion;
                           });
+                          // Trigger onChanged to ensure consistency
+                          // This ensures the description variable is properly updated
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            setState(() => description = suggestion);
+                          });
                         },
                       ),
 
