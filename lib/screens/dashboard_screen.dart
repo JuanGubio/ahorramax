@@ -1448,6 +1448,14 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
           if (showTutorial)
             TutorialOverlay(onComplete: _handleTutorialComplete),
 
+          // Money Mascot
+          if (!showTutorial)
+            const Positioned(
+              bottom: 100,
+              left: 16,
+              child: MoneyMascot(),
+            ),
+
 
         ],
       ),
