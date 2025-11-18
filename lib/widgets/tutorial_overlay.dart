@@ -17,38 +17,44 @@ class _TutorialOverlayState extends State<TutorialOverlay> with TickerProviderSt
 
   final List<Map<String, dynamic>> _tutorialSteps = [
     {
-      'title': '¡Bienvenido a AhorraMax! 👋',
+      'title': '¡Bienvenido a AhorraMax!',
       'description': 'Tu asistente financiero personal. Vamos a hacer un tour rápido.',
+      'icon': Icons.waving_hand,
       'target': 'balance-section',
       'position': 'center',
     },
     {
       'title': 'Tu Balance Actual',
       'description': 'Aquí verás todo tu dinero disponible. Puedes agregar más haciendo clic en el botón +.',
+      'icon': Icons.account_balance_wallet,
       'target': 'balance-section',
       'position': 'top',
     },
     {
-      'title': 'Ahorros y Gastos 📊',
+      'title': 'Ahorros y Gastos',
       'description': 'Monitorea tus ahorros totales y gastos del mes. ¡Mantén el equilibrio!',
+      'icon': Icons.bar_chart,
       'target': 'ahorros-section',
       'position': 'top',
     },
     {
       'title': 'Agregar Gasto',
       'description': 'Registra tus gastos aquí. Categorízalos correctamente para mejores recomendaciones.',
+      'icon': Icons.add_shopping_cart,
       'target': 'add-expense-form',
       'position': 'bottom',
     },
     {
-      'title': 'Recomendaciones IA 🤖',
+      'title': 'Recomendaciones IA',
       'description': 'La IA te dará consejos personalizados basados en tus hábitos de gasto.',
+      'icon': Icons.smart_toy,
       'target': 'recommendations-section',
       'position': 'top',
     },
     {
-      'title': '¡Listo para empezar! 🚀',
+      'title': '¡Listo para empezar!',
       'description': 'Ahora puedes comenzar a gestionar tus finanzas. ¡Recuerda registrar todo!',
+      'icon': Icons.rocket_launch,
       'target': 'center',
       'position': 'center',
     },
@@ -155,11 +161,11 @@ class _TutorialOverlayState extends State<TutorialOverlay> with TickerProviderSt
                                 decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
                                   gradient: LinearGradient(
-                                    colors: [Colors.yellow, Colors.orange],
+                                    colors: [Color(0xFF2ECC71), Color(0xFF4FA3FF)],
                                   ),
                                 ),
-                                child: const Icon(
-                                  Icons.emoji_emotions,
+                                child: Icon(
+                                  step['icon'] ?? Icons.account_circle,
                                   color: Colors.white,
                                   size: 40,
                                 ),

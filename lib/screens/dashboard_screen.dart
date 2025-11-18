@@ -16,6 +16,7 @@ import '../widgets/financial_goals.dart';
 import '../widgets/weekly_insights.dart';
 import '../widgets/financial_chatbot.dart';
 import '../widgets/custom_nav_bar.dart';
+import 'wallet_screen.dart';
 import '../models.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -306,14 +307,20 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Center(
-                        child: Text(
-                          'G',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          width: 32,
+                          height: 32,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.attach_money,
+                              color: Colors.white,
+                              size: 20,
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -625,274 +632,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     );
   }
 
-  void _showWalletDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                const Color(0xFFF0FFF4),
-                const Color(0xFFE6FBFF),
-                const Color(0xFFFFF6EA),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF2ECC71), Color(0xFF4FA3FF)],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Icon(Icons.account_balance_wallet, color: Colors.white),
-                  ),
-                  const SizedBox(width: 12),
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [Color(0xFF2ECC71), Color(0xFF4FA3FF)],
-                    ).createShader(bounds),
-                    child: const Text(
-                      'Mi Cartera',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Cards
-              GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  // Balance Card
-                  Card(
-                    elevation: 8,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Colors.green, Color(0xFF2E7D32)],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(Icons.account_balance_wallet, color: Colors.white),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Dinero Actual',
-                            style: TextStyle(color: Colors.white70, fontSize: 12),
-                          ),
-                          Text(
-                            '\$${_formatLargeNumber(balance)}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Income Card
-                  Card(
-                    elevation: 8,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Colors.teal, Colors.greenAccent],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(Icons.trending_up, color: Colors.white),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Ingresos del Mes',
-                            style: TextStyle(color: Colors.white70, fontSize: 12),
-                          ),
-                          Text(
-                            '\$${incomes.fold<double>(0, (sum, income) => sum + income.amount).toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Expenses Card
-                  Card(
-                    elevation: 8,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Colors.red, Colors.redAccent],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(Icons.trending_down, color: Colors.white),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Gastos del Mes',
-                            style: TextStyle(color: Colors.white70, fontSize: 12),
-                          ),
-                          Text(
-                            '\$${monthlyExpenses.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Savings Card
-                  Card(
-                    elevation: 8,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Colors.blue, Colors.indigo],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(Icons.savings, color: Colors.white),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Ahorros Totales',
-                            style: TextStyle(color: Colors.white70, fontSize: 12),
-                          ),
-                          Text(
-                            '\$${savings.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              // Close button
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2ECC71),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: const Text(
-                  'Cerrar',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
 
   bool _hasActivityToday() {
@@ -930,14 +669,49 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Scaffold(
+      return Scaffold(
+        backgroundColor: const Color(0xFFF5F7FA),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Cargando tus datos...', style: TextStyle(fontSize: 16)),
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2ECC71), Color(0xFF4FA3FF)],
+                  ),
+                  borderRadius: BorderRadius.circular(40),
+                ),
+                child: const Icon(
+                  Icons.account_balance_wallet,
+                  color: Colors.white,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Cargando tus datos...',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2ECC71)),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Preparando tu experiencia financiera',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
             ],
           ),
         ),
@@ -952,12 +726,21 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
         child: const Icon(Icons.smart_toy),
         tooltip: 'Asistente Financiero IA',
       ),
-      bottomNavigationBar: CustomNavBar(
+      bottomNavigationBar: showTutorial ? null : CustomNavBar(
         onHomeTap: () {
           // Scroll to top or stay on dashboard
         },
         onAddTap: () => setState(() => showAddMoney = true),
-        onWalletTap: _showWalletDialog,
+        onWalletTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => WalletScreen(
+            balance: balance,
+            monthlyExpenses: monthlyExpenses,
+            savings: savings,
+            incomes: incomes,
+            expenses: userExpenses,
+          )),
+        ),
       ),
       body: Stack(
         children: [
@@ -1018,7 +801,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 Theme.of(context).brightness == Brightness.dark
                                     ? Icons.light_mode
                                     : Icons.dark_mode,
-                                color: Colors.white,
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
                               ),
                             ),
                             GestureDetector(
@@ -1666,13 +1451,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             TutorialOverlay(onComplete: _handleTutorialComplete),
 
 
-          // Money Mascot
-          if (!showTutorial)
-            const Positioned(
-              bottom: 16,
-              left: 16,
-              child: MoneyMascot(),
-            ),
         ],
       ),
     );

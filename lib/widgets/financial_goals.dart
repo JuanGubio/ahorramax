@@ -420,10 +420,10 @@ class GoalCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
               ),
             ],
+            ,
 
             if (goal.daysRemaining > 0) ...[
               const SizedBox(height: 8),
@@ -494,9 +494,13 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width > 600 ? 500 : MediaQuery.of(context).size.width * 0.9,
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
         padding: const EdgeInsets.all(24),
-        child: Form(
+        child: SingleChildScrollView(
+          child: Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -526,138 +530,236 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
               ),
               const SizedBox(height: 24),
 
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Título de la meta',
-                  hintText: 'Ej: Comprar un carro',
-                  border: OutlineInputBorder(),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa un título';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Descripción (opcional)',
-                  hintText: 'Detalles adicionales de tu meta',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 16),
-
-              TextFormField(
-                controller: _targetAmountController,
-                decoration: const InputDecoration(
-                  labelText: 'Monto objetivo',
-                  hintText: 'Ej: 5000.00',
-                  border: OutlineInputBorder(),
-                  prefixText: '\$',
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa un monto';
-                  }
-                  final amount = double.tryParse(value.replaceAll(',', '.'));
-                  if (amount == null || amount <= 0) {
-                    return 'Ingresa un monto válido mayor a 0';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              DropdownButtonFormField<GoalType>(
-                value: _selectedType,
-                decoration: const InputDecoration(
-                  labelText: 'Tipo de meta',
-                  border: OutlineInputBorder(),
-                ),
-                items: GoalType.values.map((type) {
-                  return DropdownMenuItem(
-                    value: type,
-                    child: Text(_getGoalTypeText(type)),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() => _selectedType = value!);
-                },
-              ),
-              const SizedBox(height: 16),
-
-              DropdownButtonFormField<GoalPeriod>(
-                value: _selectedPeriod,
-                decoration: const InputDecoration(
-                  labelText: 'Período',
-                  border: OutlineInputBorder(),
-                ),
-                items: GoalPeriod.values.map((period) {
-                  return DropdownMenuItem(
-                    value: period,
-                    child: Text(_getGoalPeriodText(period)),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() => _selectedPeriod = value!);
-                },
-              ),
-              const SizedBox(height: 16),
-
-              InkWell(
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now().add(const Duration(days: 30)),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
-                  );
-                  if (date != null) {
-                    setState(() => _targetDate = date);
-                  }
-                },
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Fecha objetivo (opcional)',
-                    border: OutlineInputBorder(),
+                child: TextFormField(
+                  controller: _titleController,
+                  decoration: InputDecoration(
+                    labelText: 'Título de la meta',
+                    hintText: 'Ej: Comprar un carro',
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    labelStyle: TextStyle(color: Colors.grey.shade600),
+                    hintStyle: TextStyle(color: Colors.grey.shade400),
                   ),
-                  child: Text(
-                    _targetDate != null
-                        ? '${_targetDate!.day}/${_targetDate!.month}/${_targetDate!.year}'
-                        : 'Seleccionar fecha',
-                    style: TextStyle(
-                      color: _targetDate != null ? null : Colors.grey,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor ingresa un título';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: TextFormField(
+                  controller: _descriptionController,
+                  decoration: InputDecoration(
+                    labelText: 'Descripción (opcional)',
+                    hintText: 'Detalles adicionales de tu meta',
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    labelStyle: TextStyle(color: Colors.grey.shade600),
+                    hintStyle: TextStyle(color: Colors.grey.shade400),
+                  ),
+                  maxLines: 2,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: TextFormField(
+                  controller: _targetAmountController,
+                  decoration: InputDecoration(
+                    labelText: 'Monto objetivo',
+                    hintText: 'Ej: 5000.00',
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    labelStyle: TextStyle(color: Colors.grey.shade600),
+                    hintStyle: TextStyle(color: Colors.grey.shade400),
+                    prefixText: '\$',
+                    prefixStyle: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor ingresa un monto';
+                    }
+                    final amount = double.tryParse(value.replaceAll(',', '.'));
+                    if (amount == null || amount <= 0) {
+                      return 'Ingresa un monto válido mayor a 0';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: DropdownButtonFormField<GoalType>(
+                  value: _selectedType,
+                  decoration: InputDecoration(
+                    labelText: 'Tipo de meta',
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    labelStyle: TextStyle(color: Colors.grey.shade600),
+                  ),
+                  items: GoalType.values.map((type) {
+                    return DropdownMenuItem(
+                      value: type,
+                      child: Text(_getGoalTypeText(type)),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() => _selectedType = value!);
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: DropdownButtonFormField<GoalPeriod>(
+                  value: _selectedPeriod,
+                  decoration: InputDecoration(
+                    labelText: 'Período',
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    labelStyle: TextStyle(color: Colors.grey.shade600),
+                  ),
+                  items: GoalPeriod.values.map((period) {
+                    return DropdownMenuItem(
+                      value: period,
+                      child: Text(_getGoalPeriodText(period)),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() => _selectedPeriod = value!);
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      'Fecha objetivo (opcional)',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now().add(const Duration(days: 30)),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+                      );
+                      if (date != null) {
+                        setState(() => _targetDate = date);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _targetDate != null
+                                  ? '${_targetDate!.day}/${_targetDate!.month}/${_targetDate!.year}'
+                                  : 'Seleccionar fecha',
+                              style: TextStyle(
+                                color: _targetDate != null ? Colors.black : Colors.grey.shade600,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.calendar_today,
+                            color: Colors.grey.shade600,
+                            size: 20,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
+              ,
 
               const SizedBox(height: 24),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancelar'),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancelar',
+                        style: TextStyle(color: Colors.grey.shade700),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton(
                     onPressed: _submitForm,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
+                      backgroundColor: const Color(0xFF2ECC71),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
                         vertical: 12,
                       ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
                     ),
                     child: const Text('Crear Meta'),
                   ),

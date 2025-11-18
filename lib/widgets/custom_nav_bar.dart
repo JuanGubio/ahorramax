@@ -16,7 +16,7 @@ class CustomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       // Contenedor principal de la barra
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
@@ -32,7 +32,7 @@ class CustomNavBar extends StatelessWidget {
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           // Botón 1: Inicio (Activo)
           _buildActiveItem(Icons.home_filled, "Inicio"),
@@ -52,7 +52,7 @@ class CustomNavBar extends StatelessWidget {
     return GestureDetector(
       onTap: onHomeTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: const Color(0xFF4CD97B), // Color verde similar a la imagen
           borderRadius: BorderRadius.circular(20),

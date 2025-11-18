@@ -77,6 +77,7 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
                   ],
                 ),
                 child: TableCalendar(
+                  locale: 'es_ES',
                   firstDay: DateTime(2020),
                   lastDay: DateTime(2030),
                   focusedDay: _focusedDate,
