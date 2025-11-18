@@ -515,23 +515,25 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
                       Row(
                         children: [
                           Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade50,
-                                borderRadius: BorderRadius.circular(25),
-                                border: Border.all(
-                                  color: _isListening ? Colors.red.shade200 : Colors.grey.shade200,
-                                  width: 1.5,
-                                ),
-                                boxShadow: _isListening ? [
-                                  BoxShadow(
-                                    color: Colors.red.withOpacity(0.1),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
+                            child: Material(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(25),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(25),
+                                  border: Border.all(
+                                    color: _isListening ? Colors.red.shade200 : Colors.grey.shade200,
+                                    width: 1.5,
                                   ),
-                                ] : null,
-                              ),
-                              child: TextField(
+                                  boxShadow: _isListening ? [
+                                    BoxShadow(
+                                      color: Colors.red.withOpacity(0.1),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ] : null,
+                                ),
+                                child: TextField(
                                 controller: _messageController,
                                 style: const TextStyle(
                                   fontSize: 16,
@@ -572,6 +574,7 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
                               ),
                             ),
                           ),
+                        ),
                           const SizedBox(width: 12),
                           Container(
                             decoration: BoxDecoration(
