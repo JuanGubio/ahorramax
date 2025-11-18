@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "603925997351",
+    "project_id": "ahorramax-a2720",
+    "storage_bucket": "ahorramax-a2720.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:603925997351:android:de51fad92f4e6aa2e5ab02",
+        "android_client_info": {
+          "package_name": "com.ahorramax.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxvGVq8dOtEcWGR-5jPpyEW51MgT1NS4Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

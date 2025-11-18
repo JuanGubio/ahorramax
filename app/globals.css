@@ -1,0 +1,167 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+  --color-primary-dark: #46a302;
+  --color-surface: #f7f7f7;
+}
+
+/* Mejorando colores para modo oscuro - paleta coherente */
+.dark {
+  --background: #0a0a0a; /* Negro profundo */
+  --foreground: #f5f5f5; /* Blanco suave */
+  --card: #1a1a1a; /* Gris oscuro para tarjetas */
+  --card-foreground: #f5f5f5;
+  --popover: #1a1a1a;
+  --popover-foreground: #f5f5f5;
+  --primary: #58cc02; /* Verde Duolingo */
+  --primary-foreground: #0a0a0a;
+  --secondary: #1cb0f6; /* Azul brillante */
+  --secondary-foreground: #0a0a0a;
+  --muted: #2a2a2a; /* Gris medio */
+  --muted-foreground: #a0a0a0; /* Gris claro para texto secundario */
+  --accent: #ff9600; /* Naranja vibrante */
+  --accent-foreground: #0a0a0a;
+  --destructive: #ff4b4b;
+  --destructive-foreground: #f5f5f5;
+  --border: #2a2a2a; /* Bordes sutiles */
+  --input: #2a2a2a;
+  --ring: #58cc02;
+  --color-primary-dark: #46a302;
+  --color-surface: #1a1a1a;
+}
+
+@theme inline {
+  /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: #58cc02; /* Verde Duolingo */
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: #1cb0f6; /* Azul brillante */
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  /* Cambiando color amarillo por naranja más vibrante */
+  --color-accent: #ff9600; /* Naranja vibrante en lugar de amarillo */
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  /* Colores de categorías variados pero coherentes */
+  --color-chart-1: #58cc02; /* Verde */
+  --color-chart-2: #1cb0f6; /* Azul */
+  --color-chart-3: #ff9600; /* Naranja */
+  --color-chart-4: #ce82ff; /* Morado claro */
+  --color-chart-5: #ff4b4b; /* Rojo */
+  --color-success: #58cc02;
+  --color-warning: #ff9600;
+  --color-danger: #ff4b4b;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-primary-dark: #46a302;
+  --color-surface: #f7f7f7;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-background);
+  color: var(--color-foreground);
+}
+
+/* Agregando animación shimmer para la barra de progreso */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* Agregando animación para la barra de carga del splash screen */
+@keyframes loading-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-loading-bar {
+  animation: loading-bar 2.5s ease-in-out infinite;
+}
+
+/* Agregando clase delay para animaciones escalonadas */
+.delay-700 {
+  animation-delay: 700ms;
+}
+
+.delay-1000 {
+  animation-delay: 1000ms;
+}
