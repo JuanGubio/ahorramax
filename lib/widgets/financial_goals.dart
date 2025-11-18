@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models.dart';
+import 'success_notification.dart';
 
 class FinancialGoalsWidget extends StatefulWidget {
   const FinancialGoalsWidget({super.key});
@@ -606,6 +607,14 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
       );
 
       widget.onSave(goal);
+
+      // Mostrar notificación de éxito
+      SuccessNotification.show(
+        context,
+        message: 'Meta creada exitosamente',
+        amount: goal.targetAmount.toStringAsFixed(2),
+        isIncome: true,
+      );
     }
   }
 
@@ -854,6 +863,7 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                           iconColor: const Color(0xFF9C27B0),
                           child: DropdownButtonFormField<GoalType>(
                             value: _selectedType,
+                            isExpanded: true,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -867,11 +877,22 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                             items: GoalType.values.map((type) {
                               return DropdownMenuItem(
                                 value: type,
-                                child: Text(_getGoalTypeText(type)),
+                                child: Text(
+                                  _getGoalTypeText(type),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               );
                             }).toList(),
                             onChanged: (value) {
-                              setState(() => _selectedType = value!);
+                              if (value != null) {
+                                setState(() => _selectedType = value);
+                              }
+                            },
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Selecciona un tipo de meta';
+                              }
+                              return null;
                             },
                           ),
                         ),
@@ -883,6 +904,7 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                           iconColor: const Color(0xFFFF9800),
                           child: DropdownButtonFormField<GoalPeriod>(
                             value: _selectedPeriod,
+                            isExpanded: true,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -896,11 +918,22 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                             items: GoalPeriod.values.map((period) {
                               return DropdownMenuItem(
                                 value: period,
-                                child: Text(_getGoalPeriodText(period)),
+                                child: Text(
+                                  _getGoalPeriodText(period),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               );
                             }).toList(),
                             onChanged: (value) {
-                              setState(() => _selectedPeriod = value!);
+                              if (value != null) {
+                                setState(() => _selectedPeriod = value);
+                              }
+                            },
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Selecciona un período';
+                              }
+                              return null;
                             },
                           ),
                         ),

@@ -395,22 +395,6 @@ Reglas:
       // Reset controllers
       _descriptionController.clear();
       _amountController.clear();
-
-      // Mostrar mensaje de éxito
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: 8),
-                Text("Ingreso de \$${income.amount.toStringAsFixed(2)} guardado correctamente"),
-              ],
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
     } catch (e) {
       // Mostrar error al usuario
       if (context.mounted) {

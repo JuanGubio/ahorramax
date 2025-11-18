@@ -16,6 +16,7 @@ import '../widgets/financial_goals.dart';
 import '../widgets/weekly_insights.dart';
 import '../widgets/financial_chatbot.dart';
 import '../widgets/custom_nav_bar.dart';
+import '../widgets/success_notification.dart';
 import 'wallet_screen.dart';
 import '../models.dart';
 
@@ -388,6 +389,14 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
     _playSound("remove");
 
+    // Mostrar notificación de éxito
+    SuccessNotification.show(
+      context,
+      message: 'Gasto agregado exitosamente',
+      amount: expense.amount.toStringAsFixed(2),
+      isIncome: false,
+    );
+
     // Forzar recarga de datos para asegurar persistencia
     _cargarDatosUsuario();
   }
@@ -398,6 +407,14 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       balance += income.amount;
     });
     _playSound("add");
+
+    // Mostrar notificación de éxito
+    SuccessNotification.show(
+      context,
+      message: 'Ingreso agregado exitosamente',
+      amount: income.amount.toStringAsFixed(2),
+      isIncome: true,
+    );
 
     // Nota: Los datos ya fueron guardados en Firebase por el formulario,
     // no necesitamos recargar ya que causaría una condición de carrera
@@ -449,6 +466,14 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       });
 
       _playSound("remove");
+
+      // Mostrar notificación de éxito
+      SuccessNotification.show(
+        context,
+        message: 'Gasto eliminado exitosamente',
+        amount: expense.amount.toStringAsFixed(2),
+        isIncome: false,
+      );
     } catch (e) {
       print("Error al eliminar gasto: $e");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -500,6 +525,14 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       });
 
       _playSound("remove");
+
+      // Mostrar notificación de éxito
+      SuccessNotification.show(
+        context,
+        message: 'Ingreso eliminado exitosamente',
+        amount: income.amount.toStringAsFixed(2),
+        isIncome: false,
+      );
     } catch (e) {
       print("Error al eliminar ingreso: $e");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -553,6 +586,14 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       });
 
       print("Todos los datos han sido reseteados");
+
+      // Mostrar notificación de éxito
+      SuccessNotification.show(
+        context,
+        message: 'Datos reseteados exitosamente',
+        amount: '0.00',
+        isIncome: false,
+      );
     } catch (e) {
       print("Error al resetear datos: $e");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -598,6 +639,14 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
           addMoneyAmount = "";
         });
         _playSound("add");
+
+        // Mostrar notificación de éxito
+        SuccessNotification.show(
+          context,
+          message: 'Dinero agregado exitosamente',
+          amount: amount.toStringAsFixed(2),
+          isIncome: true,
+        );
 
         // Forzar recarga de datos para asegurar persistencia
         _cargarDatosUsuario();
@@ -922,102 +971,276 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                       ),
                       const SizedBox(height: 24),
 
-                      // Resumen del día
+                      // Resumen del día mejorado
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF667EEA).withOpacity(0.1),
+                              const Color(0xFF764BA2).withOpacity(0.1),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: const Color(0xFF667EEA).withOpacity(0.2),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF667EEA).withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Header con ícono
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
-                                  'Resumen del día:',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF667EEA).withOpacity(0.3),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.today,
+                                    color: Colors.white,
+                                    size: 20,
                                   ),
                                 ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      'Gastos: -\$${userExpenses.where((expense) {
-                                        final now = DateTime.now();
-                                        return expense.date.year == now.year &&
-                                               expense.date.month == now.month &&
-                                               expense.date.day == now.day;
-                                      }).fold<double>(0, (sum, expense) => sum + expense.amount).toStringAsFixed(2)}',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.red,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Ingresos: +\$${incomes.where((income) {
-                                        final now = DateTime.now();
-                                        return income.date.year == now.year &&
-                                               income.date.month == now.month &&
-                                               income.date.day == now.day;
-                                      }).fold<double>(0, (sum, income) => sum + income.amount).toStringAsFixed(2)}',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green,
-                                      ),
-                                    ),
-                                  ],
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Resumen del día',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF2D3748),
+                                  ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 20),
+
+                            // Estadísticas en fila
+                            Row(
+                              children: [
+                                // Gastos del día
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Colors.red.withOpacity(0.2),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.trending_down,
+                                              color: Colors.red[600],
+                                              size: 16,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              'Gastos',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.red[600],
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Builder(
+                                          builder: (context) {
+                                            final now = DateTime.now();
+                                            final dayExpenses = userExpenses.where((expense) =>
+                                              expense.date.year == now.year &&
+                                              expense.date.month == now.month &&
+                                              expense.date.day == now.day
+                                            ).fold<double>(0, (sum, expense) => sum + expense.amount);
+
+                                            return Text(
+                                              '-\$${dayExpenses.toStringAsFixed(2)}',
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.red,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+
+                                // Ingresos del día
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Colors.green.withOpacity(0.2),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.trending_up,
+                                              color: Colors.green[600],
+                                              size: 16,
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              'Ingresos',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.green[600],
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Builder(
+                                          builder: (context) {
+                                            final now = DateTime.now();
+                                            final dayIncomes = incomes.where((income) =>
+                                              income.date.year == now.year &&
+                                              income.date.month == now.month &&
+                                              income.date.day == now.day
+                                            ).fold<double>(0, (sum, income) => sum + income.amount);
+
+                                            return Text(
+                                              '+\$${dayIncomes.toStringAsFixed(2)}',
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.green,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // Balance del día destacado
                             Container(
-                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                              padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.8),
-                                borderRadius: BorderRadius.circular(8),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.white,
+                                    Colors.grey.shade50,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.grey.shade200,
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.shade200,
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Text(
-                                    'Balance del día: ',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF667EEA).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.account_balance_wallet,
+                                      color: Color(0xFF667EEA),
+                                      size: 20,
                                     ),
                                   ),
-                                  Builder(
-                                    builder: (context) {
-                                      final now = DateTime.now();
-                                      final dayExpenses = userExpenses.where((expense) =>
-                                        expense.date.year == now.year &&
-                                        expense.date.month == now.month &&
-                                        expense.date.day == now.day
-                                      ).fold<double>(0, (sum, expense) => sum + expense.amount);
-
-                                      final dayIncomes = incomes.where((income) =>
-                                        income.date.year == now.year &&
-                                        income.date.month == now.month &&
-                                        income.date.day == now.day
-                                      ).fold<double>(0, (sum, income) => sum + income.amount);
-
-                                      final dayBalance = dayIncomes - dayExpenses;
-                                      final isPositive = dayBalance >= 0;
-
-                                      return Text(
-                                        '${isPositive ? '+' : ''}\$${dayBalance.toStringAsFixed(2)}',
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Balance del día',
                                         style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: isPositive ? Colors.green : Colors.red,
+                                          fontSize: 14,
+                                          color: Colors.grey[600],
+                                          fontWeight: FontWeight.w500,
                                         ),
-                                      );
-                                    },
+                                      ),
+                                      Builder(
+                                        builder: (context) {
+                                          final now = DateTime.now();
+                                          final dayExpenses = userExpenses.where((expense) =>
+                                            expense.date.year == now.year &&
+                                            expense.date.month == now.month &&
+                                            expense.date.day == now.day
+                                          ).fold<double>(0, (sum, expense) => sum + expense.amount);
+
+                                          final dayIncomes = incomes.where((income) =>
+                                            income.date.year == now.year &&
+                                            income.date.month == now.month &&
+                                            income.date.day == now.day
+                                          ).fold<double>(0, (sum, income) => sum + income.amount);
+
+                                          final dayBalance = dayIncomes - dayExpenses;
+                                          final isPositive = dayBalance >= 0;
+
+                                          return Text(
+                                            '${isPositive ? '+' : ''}\$${dayBalance.toStringAsFixed(2)}',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: isPositive ? Colors.green[700] : Colors.red[700],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -1536,57 +1759,293 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
             Container(
               color: Colors.black.withOpacity(0.5),
               child: Center(
-                child: Card(
-                  margin: const EdgeInsets.all(32),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  margin: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        const Color(0xFFF0FFF4),
+                        const Color(0xFFE6FBFF),
+                        const Color(0xFFFFF6EA),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 25,
+                        offset: const Offset(0, 12),
+                      ),
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.8),
+                        blurRadius: 15,
+                        offset: const Offset(0, -5),
+                      ),
+                    ],
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(28),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.account_balance_wallet, size: 48, color: Colors.green),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Agregar más dinero',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text('Ingresa la cantidad que quieres agregar a tu balance actual'),
-                        const SizedBox(height: 16),
-                        TextField(
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            hintText: 'Ingresa cantidad',
-                            border: OutlineInputBorder(),
+                        // Header
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                const Color(0xFF2ECC71).withOpacity(0.1),
+                                const Color(0xFF4FA3FF).withOpacity(0.1),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: const Color(0xFF2ECC71).withOpacity(0.2),
+                              width: 1,
+                            ),
                           ),
-                          onChanged: (value) => addMoneyAmount = value,
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () => setState(() {
-                                  showAddMoney = false;
-                                  addMoneyAmount = "";
-                                }),
-                                child: const Text('Cancelar'),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: _handleAddMoney,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(context).primaryColor,
-                                  foregroundColor: Colors.white,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFF2ECC71), Color(0xFF4FA3FF)],
+                                  ),
+                                  borderRadius: BorderRadius.circular(30),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF2ECC71).withOpacity(0.3),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
-                                child: const Text('Agregar'),
+                                child: const Icon(
+                                  Icons.account_balance_wallet,
+                                  color: Colors.white,
+                                  size: 32,
+                                ),
                               ),
+                              const SizedBox(width: 16),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ShaderMask(
+                                    shaderCallback: (bounds) => const LinearGradient(
+                                      colors: [Color(0xFF2ECC71), Color(0xFF4FA3FF)],
+                                    ).createShader(bounds),
+                                    child: const Text(
+                                      '💰 Agregar Dinero',
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Incrementa tu balance actual',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+
+                        // Amount Input
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.green.shade200,
+                              width: 1,
                             ),
-                          ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.attach_money,
+                                    color: Colors.green.shade600,
+                                    size: 24,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Monto a Agregar',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green.shade800,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.green.shade300,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: TextField(
+                                  keyboardType: TextInputType.number,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                  decoration: InputDecoration(
+                                    prefixIcon: Container(
+                                      margin: const EdgeInsets.all(12),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.shade100,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        '\$',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.green.shade700,
+                                        ),
+                                      ),
+                                    ),
+                                    hintText: '0.00',
+                                    hintStyle: TextStyle(
+                                      color: Colors.grey.shade400,
+                                      fontSize: 18,
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 20,
+                                    ),
+                                  ),
+                                  onChanged: (value) => addMoneyAmount = value,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Buttons
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.grey.withOpacity(0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.grey.shade400,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: OutlinedButton(
+                                    onPressed: () => setState(() {
+                                      showAddMoney = false;
+                                      addMoneyAmount = "";
+                                    }),
+                                    style: OutlinedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      side: BorderSide.none,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'Cancelar',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Container(
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.green.shade500,
+                                        Colors.teal.shade500,
+                                      ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.green.shade300.withOpacity(0.5),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ElevatedButton(
+                                    onPressed: _handleAddMoney,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      '💰 Agregar Dinero',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
