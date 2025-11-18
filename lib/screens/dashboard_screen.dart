@@ -989,10 +989,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
                       const SizedBox(height: 24),
 
-                      // Calendario después del resumen financiero
-                      ExpenseCalendar(expenses: userExpenses),
-
-                      const SizedBox(height: 24),
 
                       // Balance Cards
                       GridView.count(
@@ -1245,6 +1241,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
                       // Additional Components
                       const SizedBox(height: 24),
+                      ExpenseCalendar(expenses: userExpenses),
+                      const SizedBox(height: 16),
                       StreakTracker(hasActivityToday: _hasActivityToday()),
                       const SizedBox(height: 16),
                       const FinancialGoalsWidget(),

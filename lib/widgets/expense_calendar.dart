@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../models.dart';
 
@@ -16,6 +17,12 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
   DateTime _selectedDate = DateTime.now();
   DateTime _focusedDate = DateTime.now();
   CalendarFormat _calendarFormat = CalendarFormat.month;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeDateFormatting('es');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +61,8 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
                       ),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.calendar_month, color: Colors.white, size: 24),
+                    child: const Icon(Icons.calendar_month,
+                        color: Colors.white, size: 24),
                   ),
                   const SizedBox(width: 12),
                   const Text(
@@ -67,7 +75,9 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
               Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3), width: 2),
+                  border: Border.all(
+                      color: Theme.of(context).primaryColor.withOpacity(0.3),
+                      width: 2),
                   boxShadow: [
                     BoxShadow(
                       color: Theme.of(context).primaryColor.withOpacity(0.1),
@@ -77,7 +87,6 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
                   ],
                 ),
                 child: TableCalendar(
-                  locale: 'es_ES',
                   firstDay: DateTime(2020),
                   lastDay: DateTime(2030),
                   focusedDay: _focusedDate,
@@ -91,258 +100,388 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
                     // Mostrar diálogo con gastos del día seleccionado
                     final expensesForDay = widget.expenses.where((expense) {
                       return expense.date.year == selectedDay.year &&
-                             expense.date.month == selectedDay.month &&
-                             expense.date.day == selectedDay.day;
+                          expense.date.month == selectedDay.month &&
+                          expense.date.day == selectedDay.day;
                     }).toList();
 
                     if (expensesForDay.isNotEmpty) {
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: Text('Gastos del ${DateFormat('dd/MM/yyyy').format(selectedDay)}'),
+                          title: Text(
+                              'Gastos del ${DateFormat('dd/MM/yyyy').format(selectedDay)}'),
                           content: SingleChildScrollView(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
-                              children: expensesForDay.map((expense) => Card(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Container(
-                                            width: 30,
-                                            height: 30,
-                                            decoration: BoxDecoration(
-                                              color: _getCategoryColor(expense.category).withOpacity(0.2),
-                                              borderRadius: BorderRadius.circular(6),
-                                            ),
-                                            child: Icon(
-                                              _getCategoryIcon(expense.category),
-                                              color: _getCategoryColor(expense.category),
-                                              size: 18,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  expense.category,
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: _getCategoryColor(expense.category),
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  expense.description,
-                                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          Text(
-                                            '\$${expense.amount.toStringAsFixed(2)}',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.red,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      if (expense.location != null) ...[
-                                        Row(
-                                          children: [
-                                            const Icon(Icons.location_on, size: 14, color: Colors.grey),
-                                            const SizedBox(width: 4),
-                                            Expanded(
-                                              child: GestureDetector(
-                                                onTap: () {
-                                                  // Abrir mapa con las coordenadas
-                                                  final coords = expense.location!.split(', ');
-                                                  if (coords.length == 2) {
-                                                    final lat = double.tryParse(coords[0]);
-                                                    final lng = double.tryParse(coords[1]);
-                                                    if (lat != null && lng != null) {
-                                                      // Abrir Google Maps o similar
-                                                      // Por ahora mostramos un diálogo con las coordenadas
-                                                      showDialog(
-                                                        context: context,
-                                                        builder: (context) => AlertDialog(
-                                                          title: const Text('Ubicación'),
-                                                          content: Column(
-                                                            mainAxisSize: MainAxisSize.min,
-                                                            children: [
-                                                              Text('Latitud: $lat'),
-                                                              Text('Longitud: $lng'),
-                                                              const SizedBox(height: 16),
-                                                              const Text(
-                                                                'Para ver el mapa completo, copia estas coordenadas en Google Maps',
-                                                                style: TextStyle(fontSize: 12, color: Colors.grey),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                          actions: [
-                                                            TextButton(
-                                                              onPressed: () => Navigator.of(context).pop(),
-                                                              child: const Text('Cerrar'),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      );
-                                                    }
-                                                  }
-                                                },
-                                                child: Text(
-                                                  expense.location!,
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.blue,
-                                                    decoration: TextDecoration.underline,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                      ],
-                                      if (expense.photoUrl != null && expense.photoUrl!.isNotEmpty) ...[
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Icon(Icons.photo_camera, size: 14, color: Colors.blue),
-                                                const SizedBox(width: 4),
-                                                const Text(
-                                                  'Foto adjunta',
-                                                  style: TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.w500),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Container(
-                                              height: 100,
-                                              width: double.infinity,
-                                              decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(8),
-                                                border: Border.all(color: Colors.grey.shade300),
-                                              ),
-                                              child: Stack(
+                              children: expensesForDay
+                                  .map((expense) => Card(
+                                        margin:
+                                            const EdgeInsets.only(bottom: 8),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(12),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
                                                 children: [
-                                                  ClipRRect(
-                                                    borderRadius: BorderRadius.circular(6),
-                                                    child: Image.network(
-                                                      expense.photoUrl!,
-                                                      fit: BoxFit.cover,
-                                                      width: double.infinity,
-                                                      height: 100,
-                                                      errorBuilder: (context, error, stackTrace) {
-                                                        return Container(
-                                                          color: Colors.grey.shade200,
-                                                          child: const Center(
-                                                            child: Icon(Icons.broken_image, size: 30, color: Colors.grey),
-                                                          ),
-                                                        );
-                                                      },
-                                                      loadingBuilder: (context, child, loadingProgress) {
-                                                        if (loadingProgress == null) return child;
-                                                        return Container(
-                                                          color: Colors.grey.shade100,
-                                                          child: const Center(
-                                                            child: CircularProgressIndicator(),
-                                                          ),
-                                                        );
-                                                      },
+                                                  Container(
+                                                    width: 30,
+                                                    height: 30,
+                                                    decoration: BoxDecoration(
+                                                      color: _getCategoryColor(
+                                                              expense.category)
+                                                          .withOpacity(0.2),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              6),
+                                                    ),
+                                                    child: Icon(
+                                                      _getCategoryIcon(
+                                                          expense.category),
+                                                      color: _getCategoryColor(
+                                                          expense.category),
+                                                      size: 18,
                                                     ),
                                                   ),
-                                                  Positioned(
-                                                    top: 4,
-                                                    right: 4,
-                                                    child: GestureDetector(
-                                                      onTap: () {
-                                                        showDialog(
-                                                          context: context,
-                                                          builder: (context) => Dialog(
-                                                            child: Container(
-                                                              constraints: const BoxConstraints(maxWidth: 400, maxHeight: 400),
-                                                              child: ClipRRect(
-                                                                borderRadius: BorderRadius.circular(8),
-                                                                child: Image.network(
-                                                                  expense.photoUrl!,
-                                                                  fit: BoxFit.contain,
-                                                                  errorBuilder: (context, error, stackTrace) {
-                                                                    return Container(
-                                                                      color: Colors.grey.shade200,
-                                                                      child: const Center(
-                                                                        child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
-                                                                      ),
-                                                                    );
-                                                                  },
-                                                                ),
-                                                              ),
-                                                            ),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          expense.category,
+                                                          style: TextStyle(
+                                                            fontSize: 12,
+                                                            color: _getCategoryColor(
+                                                                expense
+                                                                    .category),
+                                                            fontWeight:
+                                                                FontWeight.w500,
                                                           ),
-                                                        );
-                                                      },
-                                                      child: Container(
-                                                        padding: const EdgeInsets.all(6),
-                                                        decoration: BoxDecoration(
-                                                          color: Colors.black.withOpacity(0.7),
-                                                          borderRadius: BorderRadius.circular(15),
                                                         ),
-                                                        child: const Icon(
-                                                          Icons.zoom_in,
-                                                          color: Colors.white,
-                                                          size: 16,
+                                                        Text(
+                                                          expense.description,
+                                                          style: const TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold),
                                                         ),
-                                                      ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    '\$${expense.amount.toStringAsFixed(2)}',
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.red,
                                                     ),
                                                   ),
                                                 ],
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                      ],
-                                      if (expense.amountSaved != null && expense.amountSaved! > 0) ...[
-                                        Row(
-                                          children: [
-                                            const Icon(Icons.savings, size: 14, color: Colors.green),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              'Ahorraste \$${expense.amountSaved!.toStringAsFixed(2)}',
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.green,
-                                                fontWeight: FontWeight.w500,
+                                              const SizedBox(height: 8),
+                                              if (expense.location != null) ...[
+                                                Row(
+                                                  children: [
+                                                    const Icon(
+                                                        Icons.location_on,
+                                                        size: 14,
+                                                        color: Colors.grey),
+                                                    const SizedBox(width: 4),
+                                                    Expanded(
+                                                      child: GestureDetector(
+                                                        onTap: () {
+                                                          // Abrir mapa con las coordenadas
+                                                          final coords = expense
+                                                              .location!
+                                                              .split(', ');
+                                                          if (coords.length ==
+                                                              2) {
+                                                            final lat =
+                                                                double.tryParse(
+                                                                    coords[0]);
+                                                            final lng =
+                                                                double.tryParse(
+                                                                    coords[1]);
+                                                            if (lat != null &&
+                                                                lng != null) {
+                                                              // Abrir Google Maps o similar
+                                                              // Por ahora mostramos un diálogo con las coordenadas
+                                                              showDialog(
+                                                                context:
+                                                                    context,
+                                                                builder:
+                                                                    (context) =>
+                                                                        AlertDialog(
+                                                                  title: const Text(
+                                                                      'Ubicación'),
+                                                                  content:
+                                                                      Column(
+                                                                    mainAxisSize:
+                                                                        MainAxisSize
+                                                                            .min,
+                                                                    children: [
+                                                                      Text(
+                                                                          'Latitud: $lat'),
+                                                                      Text(
+                                                                          'Longitud: $lng'),
+                                                                      const SizedBox(
+                                                                          height:
+                                                                              16),
+                                                                      const Text(
+                                                                        'Para ver el mapa completo, copia estas coordenadas en Google Maps',
+                                                                        style: TextStyle(
+                                                                            fontSize:
+                                                                                12,
+                                                                            color:
+                                                                                Colors.grey),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                  actions: [
+                                                                    TextButton(
+                                                                      onPressed:
+                                                                          () =>
+                                                                              Navigator.of(context).pop(),
+                                                                      child: const Text(
+                                                                          'Cerrar'),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              );
+                                                            }
+                                                          }
+                                                        },
+                                                        child: Text(
+                                                          expense.location!,
+                                                          style:
+                                                              const TextStyle(
+                                                            fontSize: 12,
+                                                            color: Colors.blue,
+                                                            decoration:
+                                                                TextDecoration
+                                                                    .underline,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 4),
+                                              ],
+                                              if (expense.photoUrl != null &&
+                                                  expense.photoUrl!
+                                                      .isNotEmpty) ...[
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(
+                                                      children: [
+                                                        Icon(Icons.photo_camera,
+                                                            size: 14,
+                                                            color: Colors.blue),
+                                                        const SizedBox(
+                                                            width: 4),
+                                                        const Text(
+                                                          'Foto adjunta',
+                                                          style: TextStyle(
+                                                              fontSize: 12,
+                                                              color:
+                                                                  Colors.blue,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    Container(
+                                                      height: 100,
+                                                      width: double.infinity,
+                                                      decoration: BoxDecoration(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(8),
+                                                        border: Border.all(
+                                                            color: Colors
+                                                                .grey.shade300),
+                                                      ),
+                                                      child: Stack(
+                                                        children: [
+                                                          ClipRRect(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        6),
+                                                            child:
+                                                                Image.network(
+                                                              expense.photoUrl!,
+                                                              fit: BoxFit.cover,
+                                                              width: double
+                                                                  .infinity,
+                                                              height: 100,
+                                                              errorBuilder:
+                                                                  (context,
+                                                                      error,
+                                                                      stackTrace) {
+                                                                return Container(
+                                                                  color: Colors
+                                                                      .grey
+                                                                      .shade200,
+                                                                  child:
+                                                                      const Center(
+                                                                    child: Icon(
+                                                                        Icons
+                                                                            .broken_image,
+                                                                        size:
+                                                                            30,
+                                                                        color: Colors
+                                                                            .grey),
+                                                                  ),
+                                                                );
+                                                              },
+                                                              loadingBuilder:
+                                                                  (context,
+                                                                      child,
+                                                                      loadingProgress) {
+                                                                if (loadingProgress ==
+                                                                    null)
+                                                                  return child;
+                                                                return Container(
+                                                                  color: Colors
+                                                                      .grey
+                                                                      .shade100,
+                                                                  child:
+                                                                      const Center(
+                                                                    child:
+                                                                        CircularProgressIndicator(),
+                                                                  ),
+                                                                );
+                                                              },
+                                                            ),
+                                                          ),
+                                                          Positioned(
+                                                            top: 4,
+                                                            right: 4,
+                                                            child:
+                                                                GestureDetector(
+                                                              onTap: () {
+                                                                showDialog(
+                                                                  context:
+                                                                      context,
+                                                                  builder:
+                                                                      (context) =>
+                                                                          Dialog(
+                                                                    child:
+                                                                        Container(
+                                                                      constraints: const BoxConstraints(
+                                                                          maxWidth:
+                                                                              400,
+                                                                          maxHeight:
+                                                                              400),
+                                                                      child:
+                                                                          ClipRRect(
+                                                                        borderRadius:
+                                                                            BorderRadius.circular(8),
+                                                                        child: Image
+                                                                            .network(
+                                                                          expense
+                                                                              .photoUrl!,
+                                                                          fit: BoxFit
+                                                                              .contain,
+                                                                          errorBuilder: (context,
+                                                                              error,
+                                                                              stackTrace) {
+                                                                            return Container(
+                                                                              color: Colors.grey.shade200,
+                                                                              child: const Center(
+                                                                                child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                                                                              ),
+                                                                            );
+                                                                          },
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                );
+                                                              },
+                                                              child: Container(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .all(6),
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  color: Colors
+                                                                      .black
+                                                                      .withOpacity(
+                                                                          0.7),
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              15),
+                                                                ),
+                                                                child:
+                                                                    const Icon(
+                                                                  Icons.zoom_in,
+                                                                  color: Colors
+                                                                      .white,
+                                                                  size: 16,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 4),
+                                              ],
+                                              if (expense.amountSaved != null &&
+                                                  expense.amountSaved! > 0) ...[
+                                                Row(
+                                                  children: [
+                                                    const Icon(Icons.savings,
+                                                        size: 14,
+                                                        color: Colors.green),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      'Ahorraste \$${expense.amountSaved!.toStringAsFixed(2)}',
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        color: Colors.green,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 4),
+                                              ],
+                                              Row(
+                                                children: [
+                                                  const Icon(Icons.access_time,
+                                                      size: 14,
+                                                      color: Colors.grey),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    DateFormat('HH:mm')
+                                                        .format(expense.date),
+                                                    style: const TextStyle(
+                                                        fontSize: 12,
+                                                        color: Colors.grey),
+                                                  ),
+                                                ],
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                      ],
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.access_time, size: 14, color: Colors.grey),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            DateFormat('HH:mm').format(expense.date),
-                                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )).toList(),
+                                        ),
+                                      ))
+                                  .toList(),
                             ),
                           ),
                           actions: [
@@ -365,11 +504,12 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
                     _focusedDate = focusedDay;
                   },
                   eventLoader: (day) {
-                    return widget.expenses.where((expense) =>
-                      expense.date.year == day.year &&
-                      expense.date.month == day.month &&
-                      expense.date.day == day.day
-                    ).toList();
+                    return widget.expenses
+                        .where((expense) =>
+                            expense.date.year == day.year &&
+                            expense.date.month == day.month &&
+                            expense.date.day == day.day)
+                        .toList();
                   },
                   calendarStyle: CalendarStyle(
                     cellMargin: const EdgeInsets.all(4),
@@ -384,7 +524,8 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).primaryColor.withOpacity(0.3),
+                          color:
+                              Theme.of(context).primaryColor.withOpacity(0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -400,7 +541,8 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).primaryColor.withOpacity(0.2),
+                          color:
+                              Theme.of(context).primaryColor.withOpacity(0.2),
                           blurRadius: 6,
                           offset: const Offset(0, 3),
                         ),
@@ -462,7 +604,9 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
                       fontWeight: FontWeight.bold,
                     ),
                     formatButtonDecoration: BoxDecoration(
-                      border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
+                      border: Border.all(
+                          color:
+                              Theme.of(context).primaryColor.withOpacity(0.3)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     formatButtonTextStyle: TextStyle(
@@ -486,17 +630,19 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
                   ),
                   calendarBuilders: CalendarBuilders(
                     defaultBuilder: (context, day, focusedDay) {
-                      final expensesForDay = widget.expenses.where((expense) =>
-                        expense.date.year == day.year &&
-                        expense.date.month == day.month &&
-                        expense.date.day == day.day
-                      ).toList();
+                      final expensesForDay = widget.expenses
+                          .where((expense) =>
+                              expense.date.year == day.year &&
+                              expense.date.month == day.month &&
+                              expense.date.day == day.day)
+                          .toList();
 
                       if (expensesForDay.isNotEmpty) {
                         // Obtener la categoría más común del día
                         final categoryCount = <String, int>{};
                         for (final expense in expensesForDay) {
-                          categoryCount[expense.category] = (categoryCount[expense.category] ?? 0) + 1;
+                          categoryCount[expense.category] =
+                              (categoryCount[expense.category] ?? 0) + 1;
                         }
                         final mostCommonCategory = categoryCount.entries
                             .reduce((a, b) => a.value > b.value ? a : b)
@@ -507,13 +653,16 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
-                                _getCategoryColor(mostCommonCategory).withOpacity(0.3),
-                                _getCategoryColor(mostCommonCategory).withOpacity(0.1),
+                                _getCategoryColor(mostCommonCategory)
+                                    .withOpacity(0.3),
+                                _getCategoryColor(mostCommonCategory)
+                                    .withOpacity(0.1),
                               ],
                             ),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: _getCategoryColor(mostCommonCategory).withOpacity(0.5),
+                              color: _getCategoryColor(mostCommonCategory)
+                                  .withOpacity(0.5),
                               width: 2,
                             ),
                           ),
@@ -523,7 +672,8 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
                               Text(
                                 '${day.day}',
                                 style: TextStyle(
-                                  color: Theme.of(context).brightness == Brightness.dark
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
                                       ? Colors.white
                                       : Colors.black87,
                                   fontWeight: FontWeight.w600,
@@ -537,7 +687,8 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
                                   width: 16,
                                   height: 16,
                                   decoration: BoxDecoration(
-                                    color: _getCategoryColor(mostCommonCategory),
+                                    color:
+                                        _getCategoryColor(mostCommonCategory),
                                     shape: BoxShape.circle,
                                     border: Border.all(
                                       color: Theme.of(context).cardColor,
@@ -571,7 +722,9 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Theme.of(context).primaryColor.withOpacity(0.3),
+                              color: Theme.of(context)
+                                  .primaryColor
+                                  .withOpacity(0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
@@ -602,7 +755,9 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Theme.of(context).primaryColor.withOpacity(0.2),
+                              color: Theme.of(context)
+                                  .primaryColor
+                                  .withOpacity(0.2),
                               blurRadius: 6,
                               offset: const Offset(0, 3),
                             ),
@@ -612,7 +767,8 @@ class _ExpenseCalendarState extends State<ExpenseCalendar> {
                           child: Text(
                             '${day.day}',
                             style: TextStyle(
-                              color: Theme.of(context).brightness == Brightness.dark
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
                                   ? Colors.white
                                   : Colors.white,
                               fontWeight: FontWeight.bold,
