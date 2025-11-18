@@ -275,7 +275,7 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
                       colors: [
                         const Color(0xFF6366F1), // Indigo
                         const Color(0xFF8B5CF6), // Purple
-                        const Color(0xFFEC4899), // Pink
+                        const Color(0xFF3B82F6), // Blue
                       ],
                     ),
                     borderRadius: const BorderRadius.only(
@@ -678,7 +678,7 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
         ),
         decoration: BoxDecoration(
           color: isBot
-              ? Theme.of(context).primaryColor.withOpacity(0.1)
+              ? Colors.grey.shade100
               : Theme.of(context).primaryColor,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
