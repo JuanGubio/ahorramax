@@ -264,9 +264,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                     'assets/images/logo.png',
                     width: 80,
                     height: 80,
-                    fit: BoxFit.cover,
-                    color: Colors.white,
-                    colorBlendMode: BlendMode.srcIn,
+                    fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         width: 80,
