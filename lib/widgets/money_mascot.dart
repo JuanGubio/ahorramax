@@ -58,7 +58,7 @@ class _MoneyMascotState extends State<MoneyMascot> with TickerProviderStateMixin
               // Abrir chat de Gemini AI
               showDialog(
                 context: context,
-                builder: (context) => const AIChat(initialCategory: 'general'),
+                builder: (context) => AIChat(initialCategory: 'general'),
               );
             },
             child: Container(

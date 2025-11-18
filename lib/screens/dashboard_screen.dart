@@ -874,6 +874,54 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     );
   }
 
+  Widget _buildCategoryCard(String title, IconData icon, List<Color> gradient) {
+    return GestureDetector(
+      onTap: () {
+        // TODO: Implement category filtering or navigation
+        print('Tapped on category: $title');
+      },
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradient,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: Colors.white,
+                size: 24,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -1031,46 +1079,152 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                           },
                         ),
 
-                        // Navigation Bar
+                        // Navigation Bar - Beautiful Redesign
                         if (showNavBar) ...[
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
                           Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).cardColor,
-                              borderRadius: BorderRadius.circular(16),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Theme.of(context).cardColor,
+                                  Theme.of(context).cardColor.withOpacity(0.9),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: Theme.of(context).dividerColor.withOpacity(0.1),
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.black26
+                                      : Colors.grey.withOpacity(0.1),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 8),
+                                ),
+                                BoxShadow(
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.black12
+                                      : Colors.white.withOpacity(0.8),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, -5),
+                                ),
+                              ],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  '¿Qué estás buscando?',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 12),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
+                                // Header with icon
+                                Row(
                                   children: [
-                                    'Comida',
-                                    'Transporte',
-                                    'Compras',
-                                    'Salud',
-                                    'Entretenimiento',
-                                    'Educación',
-                                    'Servicios',
-                                    'Hogar'
-                                  ].map((category) => ElevatedButton.icon(
-                                    onPressed: () => _openFinancialChatbot(),
-                                    icon: Icon(_getCategoryIcon(category.toLowerCase())),
-                                    label: Text(category),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-                                      foregroundColor: Theme.of(context).brightness == Brightness.dark
-                                          ? Colors.white
-                                          : Colors.black,
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Theme.of(context).primaryColor,
+                                            Theme.of(context).primaryColor.withOpacity(0.8),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Theme.of(context).primaryColor.withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.search,
+                                        color: Colors.white,
+                                        size: 24,
+                                      ),
                                     ),
-                                  )).toList(),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '¿Qué estás buscando?',
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context).textTheme.titleLarge?.color,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Encuentra ofertas y consejos personalizados',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 24),
+
+                                // Category Grid - Beautiful Cards
+                                GridView.count(
+                                  crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 12,
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  children: [
+                                    _buildCategoryCard('Comida', Icons.restaurant, [Colors.orange, Colors.deepOrange]),
+                                    _buildCategoryCard('Transporte', Icons.directions_car, [Colors.blue, Colors.lightBlue]),
+                                    _buildCategoryCard('Compras', Icons.shopping_bag, [Colors.purple, Colors.deepPurple]),
+                                    _buildCategoryCard('Salud', Icons.local_hospital, [Colors.red, Colors.pink]),
+                                    _buildCategoryCard('Entretenimiento', Icons.movie, [Colors.indigo, Colors.blue]),
+                                    _buildCategoryCard('Educación', Icons.school, [Colors.teal, Colors.cyan]),
+                                    _buildCategoryCard('Servicios', Icons.build, [Colors.brown, Colors.orange]),
+                                    _buildCategoryCard('Hogar', Icons.home, [Colors.green, Colors.lightGreen]),
+                                  ],
+                                ),
+
+                                const SizedBox(height: 16),
+
+                                // Bottom hint
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).primaryColor.withOpacity(0.05),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.lightbulb_outline,
+                                        color: Theme.of(context).primaryColor,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          'Toca cualquier categoría para obtener recomendaciones personalizadas con IA',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.8),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -1099,240 +1253,367 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                       ),
                       const SizedBox(height: 24),
 
-                      // Resumen del día mejorado
+                      // Resumen del día mejorado - Diseño Moderno
                       Container(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              const Color(0xFF667EEA).withOpacity(0.1),
-                              const Color(0xFF764BA2).withOpacity(0.1),
+                              Colors.white,
+                              const Color(0xFFF8FAFC),
+                              const Color(0xFFF1F5F9),
                             ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
                           ),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(28),
                           border: Border.all(
-                            color: const Color(0xFF667EEA).withOpacity(0.2),
-                            width: 1,
+                            color: Colors.grey.shade200.withOpacity(0.8),
+                            width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF667EEA).withOpacity(0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 25,
+                              offset: const Offset(0, 12),
+                              spreadRadius: 2,
+                            ),
+                            BoxShadow(
+                              color: Colors.white.withOpacity(0.9),
+                              blurRadius: 20,
+                              offset: const Offset(0, -8),
                             ),
                           ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Header con ícono
+                            // Header con ícono mejorado
                             Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.all(10),
+                                  padding: const EdgeInsets.all(14),
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(
-                                      colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                                      colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
                                     ),
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(18),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFF667EEA).withOpacity(0.3),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 2),
+                                        color: const Color(0xFF6366F1).withOpacity(0.4),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 6),
                                       ),
                                     ],
                                   ),
                                   child: const Icon(
-                                    Icons.today,
+                                    Icons.insights_rounded,
                                     color: Colors.white,
-                                    size: 20,
+                                    size: 28,
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                const Text(
-                                  'Resumen del día',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF2D3748),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Resumen Financiero',
+                                        style: TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF1E293B),
+                                        ),
+                                      ),
+                                      Text(
+                                        'Tu actividad de hoy • ${DateTime.now().day}/${DateTime.now().month}',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[600],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 24),
 
-                            // Estadísticas en fila - Mobile Optimized
+                            // Comparación Ingresos vs Gastos - Diseño Premium
                             Builder(
                               builder: (context) {
-                                final screenWidth = MediaQuery.of(context).size.width;
-                                final isVerySmallScreen = screenWidth < 360;
-                                final cardPadding = isVerySmallScreen ? 10.0 : 14.0;
-                                final iconSize = isVerySmallScreen ? 12.0 : 14.0;
-                                final titleFontSize = isVerySmallScreen ? 10.0 : 11.0;
-                                final amountFontSize = isVerySmallScreen ? 14.0 : 16.0;
+                                final now = DateTime.now();
+                                final dayExpenses = userExpenses.where((expense) =>
+                                  expense.date.year == now.year &&
+                                  expense.date.month == now.month &&
+                                  expense.date.day == now.day
+                                ).fold<double>(0, (sum, expense) => sum + expense.amount);
 
-                                return Row(
+                                final dayIncomes = incomes.where((income) =>
+                                  income.date.year == now.year &&
+                                  income.date.month == now.month &&
+                                  income.date.day == now.day
+                                ).fold<double>(0, (sum, income) => sum + income.amount);
+
+                                final total = dayIncomes + dayExpenses;
+                                final expensesPercentage = total > 0 ? (dayExpenses / total) * 100 : 0.0;
+                                final incomesPercentage = total > 0 ? (dayIncomes / total) * 100 : 0.0;
+
+                                return Column(
                                   children: [
-                                    // Gastos del día
-                                    Expanded(
-                                      child: Container(
-                                        constraints: const BoxConstraints(minHeight: 70),
-                                        padding: EdgeInsets.all(cardPadding),
-                                        decoration: BoxDecoration(
-                                          color: Colors.red.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(
-                                            color: Colors.red.withOpacity(0.2),
-                                            width: 1,
+                                    // Barra de progreso visual
+                                    Container(
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade200,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: expensesPercentage.round(),
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: [Colors.red.shade400, Colors.red.shade600],
+                                                ),
+                                                borderRadius: BorderRadius.only(
+                                                  topLeft: Radius.circular(4),
+                                                  bottomLeft: Radius.circular(4),
+                                                  topRight: expensesPercentage == 100 ? Radius.circular(4) : Radius.zero,
+                                                  bottomRight: expensesPercentage == 100 ? Radius.circular(4) : Radius.zero,
+                                                ),
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Icon(
-                                                  Icons.trending_down,
-                                                  color: Colors.red[600],
-                                                  size: iconSize,
+                                          Expanded(
+                                            flex: incomesPercentage.round(),
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: [Colors.green.shade400, Colors.green.shade600],
                                                 ),
-                                                const SizedBox(width: 3),
-                                                Text(
-                                                  'Gastos',
-                                                  style: TextStyle(
-                                                    fontSize: titleFontSize,
-                                                    color: Colors.red[600],
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
+                                                borderRadius: BorderRadius.only(
+                                                  topRight: incomesPercentage == 100 ? Radius.circular(4) : Radius.zero,
+                                                  bottomRight: incomesPercentage == 100 ? Radius.circular(4) : Radius.zero,
+                                                  topLeft: expensesPercentage == 0 ? Radius.circular(4) : Radius.zero,
+                                                  bottomLeft: expensesPercentage == 0 ? Radius.circular(4) : Radius.zero,
                                                 ),
-                                              ],
+                                              ),
                                             ),
-                                            SizedBox(height: isVerySmallScreen ? 2 : 4),
-                                            Builder(
-                                              builder: (context) {
-                                                final now = DateTime.now();
-                                                final dayExpenses = userExpenses.where((expense) =>
-                                                  expense.date.year == now.year &&
-                                                  expense.date.month == now.month &&
-                                                  expense.date.day == now.day
-                                                ).fold<double>(0, (sum, expense) => sum + expense.amount);
-
-                                                return FittedBox(
-                                                  fit: BoxFit.scaleDown,
-                                                  alignment: Alignment.centerLeft,
-                                                  child: Text(
-                                                    '-\$${dayExpenses.toStringAsFixed(2)}',
-                                                    style: TextStyle(
-                                                      fontSize: amountFontSize,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: Colors.red,
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    SizedBox(width: isVerySmallScreen ? 6 : 10),
+                                    const SizedBox(height: 16),
 
-                                    // Ingresos del día
-                                    Expanded(
-                                      child: Container(
-                                        constraints: const BoxConstraints(minHeight: 70),
-                                        padding: EdgeInsets.all(cardPadding),
-                                        decoration: BoxDecoration(
-                                          color: Colors.green.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(
-                                            color: Colors.green.withOpacity(0.2),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Icon(
-                                                  Icons.trending_up,
-                                                  color: Colors.green[600],
-                                                  size: iconSize,
+                                    // Tarjetas de comparación
+                                    Row(
+                                      children: [
+                                        // Gastos del día
+                                        Expanded(
+                                          child: Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  Colors.red.shade50,
+                                                  Colors.red.shade100.withOpacity(0.6),
+                                                ],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                              ),
+                                              borderRadius: BorderRadius.circular(16),
+                                              border: Border.all(
+                                                color: Colors.red.shade200.withOpacity(0.4),
+                                                width: 1.5,
+                                              ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.red.shade100.withOpacity(0.4),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 4),
                                                 ),
-                                                const SizedBox(width: 3),
+                                              ],
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Container(
+                                                      padding: const EdgeInsets.all(8),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.red.shade100,
+                                                        borderRadius: BorderRadius.circular(10),
+                                                      ),
+                                                      child: Icon(
+                                                        Icons.trending_down_rounded,
+                                                        color: Colors.red[700],
+                                                        size: 18,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 10),
+                                                    Expanded(
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          Text(
+                                                            'Gastos',
+                                                            style: TextStyle(
+                                                              fontSize: 12,
+                                                              color: Colors.red[700],
+                                                              fontWeight: FontWeight.w600,
+                                                            ),
+                                                          ),
+                                                          Text(
+                                                            '${expensesPercentage.toStringAsFixed(1)}%',
+                                                            style: TextStyle(
+                                                              fontSize: 10,
+                                                              color: Colors.red[600],
+                                                              fontWeight: FontWeight.w500,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 8),
                                                 Text(
-                                                  'Ingresos',
+                                                  '-\$${dayExpenses.toStringAsFixed(2)}',
                                                   style: TextStyle(
-                                                    fontSize: titleFontSize,
-                                                    color: Colors.green[600],
-                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.red[800],
                                                   ),
                                                 ),
                                               ],
                                             ),
-                                            SizedBox(height: isVerySmallScreen ? 2 : 4),
-                                            Builder(
-                                              builder: (context) {
-                                                final now = DateTime.now();
-                                                final dayIncomes = incomes.where((income) =>
-                                                  income.date.year == now.year &&
-                                                  income.date.month == now.month &&
-                                                  income.date.day == now.day
-                                                ).fold<double>(0, (sum, income) => sum + income.amount);
-
-                                                return FittedBox(
-                                                  fit: BoxFit.scaleDown,
-                                                  alignment: Alignment.centerLeft,
-                                                  child: Text(
-                                                    '+\$${dayIncomes.toStringAsFixed(2)}',
-                                                    style: TextStyle(
-                                                      fontSize: amountFontSize,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: Colors.green,
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ],
+                                          ),
                                         ),
-                                      ),
+                                        const SizedBox(width: 12),
+
+                                        // Ingresos del día
+                                        Expanded(
+                                          child: Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  Colors.green.shade50,
+                                                  Colors.green.shade100.withOpacity(0.6),
+                                                ],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                              ),
+                                              borderRadius: BorderRadius.circular(16),
+                                              border: Border.all(
+                                                color: Colors.green.shade200.withOpacity(0.4),
+                                                width: 1.5,
+                                              ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.green.shade100.withOpacity(0.4),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    Container(
+                                                      padding: const EdgeInsets.all(8),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.green.shade100,
+                                                        borderRadius: BorderRadius.circular(10),
+                                                      ),
+                                                      child: Icon(
+                                                        Icons.trending_up_rounded,
+                                                        color: Colors.green[700],
+                                                        size: 18,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 10),
+                                                    Expanded(
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          Text(
+                                                            'Ingresos',
+                                                            style: TextStyle(
+                                                              fontSize: 12,
+                                                              color: Colors.green[700],
+                                                              fontWeight: FontWeight.w600,
+                                                            ),
+                                                          ),
+                                                          Text(
+                                                            '${incomesPercentage.toStringAsFixed(1)}%',
+                                                            style: TextStyle(
+                                                              fontSize: 10,
+                                                              color: Colors.green[600],
+                                                              fontWeight: FontWeight.w500,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  '+\$${dayIncomes.toStringAsFixed(2)}',
+                                                  style: TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.green[800],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 );
                               },
                             ),
 
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 20),
 
-                            // Balance del día destacado
+                            // Balance del día destacado - Diseño Premium
                             Container(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
+                                    const Color(0xFF6366F1).withOpacity(0.1),
+                                    const Color(0xFF8B5CF6).withOpacity(0.08),
                                     Colors.white,
-                                    Colors.grey.shade50,
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: Colors.grey.shade200,
-                                  width: 1,
+                                  color: const Color(0xFF6366F1).withOpacity(0.2),
+                                  width: 1.5,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.grey.shade200,
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
+                                    color: const Color(0xFF6366F1).withOpacity(0.15),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                  BoxShadow(
+                                    color: Colors.white.withOpacity(0.8),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, -4),
                                   ),
                                 ],
                               ),
@@ -1340,58 +1621,80 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.all(8),
+                                    padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF667EEA).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
+                                      gradient: const LinearGradient(
+                                        colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF6366F1).withOpacity(0.3),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
                                     ),
                                     child: const Icon(
-                                      Icons.account_balance_wallet,
-                                      color: Color(0xFF667EEA),
-                                      size: 20,
+                                      Icons.account_balance_wallet_rounded,
+                                      color: Colors.white,
+                                      size: 24,
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Balance del día',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.grey[600],
-                                          fontWeight: FontWeight.w500,
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '💰 Balance del Día',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.grey[700],
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
-                                      ),
-                                      Builder(
-                                        builder: (context) {
-                                          final now = DateTime.now();
-                                          final dayExpenses = userExpenses.where((expense) =>
-                                            expense.date.year == now.year &&
-                                            expense.date.month == now.month &&
-                                            expense.date.day == now.day
-                                          ).fold<double>(0, (sum, expense) => sum + expense.amount);
+                                        const SizedBox(height: 4),
+                                        Builder(
+                                          builder: (context) {
+                                            final now = DateTime.now();
+                                            final dayExpenses = userExpenses.where((expense) =>
+                                              expense.date.year == now.year &&
+                                              expense.date.month == now.month &&
+                                              expense.date.day == now.day
+                                            ).fold<double>(0, (sum, expense) => sum + expense.amount);
 
-                                          final dayIncomes = incomes.where((income) =>
-                                            income.date.year == now.year &&
-                                            income.date.month == now.month &&
-                                            income.date.day == now.day
-                                          ).fold<double>(0, (sum, income) => sum + income.amount);
+                                            final dayIncomes = incomes.where((income) =>
+                                              income.date.year == now.year &&
+                                              income.date.month == now.month &&
+                                              income.date.day == now.day
+                                            ).fold<double>(0, (sum, income) => sum + income.amount);
 
-                                          final dayBalance = dayIncomes - dayExpenses;
-                                          final isPositive = dayBalance >= 0;
+                                            final dayBalance = dayIncomes - dayExpenses;
+                                            final isPositive = dayBalance >= 0;
 
-                                          return Text(
-                                            '${isPositive ? '+' : ''}\$${dayBalance.toStringAsFixed(2)}',
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: isPositive ? Colors.green[700] : Colors.red[700],
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
+                                            return Row(
+                                              children: [
+                                                Text(
+                                                  '${isPositive ? '+' : ''}\$${dayBalance.abs().toStringAsFixed(2)}',
+                                                  style: TextStyle(
+                                                    fontSize: 24,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: isPositive ? Colors.green[700] : Colors.red[700],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Icon(
+                                                  isPositive ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                                                  color: isPositive ? Colors.green[600] : Colors.red[600],
+                                                  size: 20,
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),

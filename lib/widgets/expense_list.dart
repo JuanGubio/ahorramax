@@ -14,18 +14,24 @@ class ExpenseList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+    final cardPadding = isSmallScreen ? 16.0 : 24.0;
+    final iconSize = isSmallScreen ? 20.0 : 24.0;
+    final titleFontSize = isSmallScreen ? 16.0 : 18.0;
+
     if (expenses.isEmpty) {
       return Card(
         elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Padding(
-          padding: EdgeInsets.all(24),
+        child: Padding(
+          padding: EdgeInsets.all(cardPadding),
           child: Center(
             child: Text(
               'No hay gastos registrados',
-              style: TextStyle(color: Colors.grey, fontSize: 16),
+              style: TextStyle(color: Colors.grey, fontSize: isSmallScreen ? 14 : 16),
             ),
           ),
         ),
@@ -42,17 +48,19 @@ class ExpenseList extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(cardPadding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.receipt_long, color: Theme.of(context).primaryColor, size: 24),
+                Icon(Icons.receipt_long, color: Theme.of(context).primaryColor, size: iconSize),
                 const SizedBox(width: 8),
-                const Text(
-                  'Lista de Gastos',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Text(
+                    'Lista de Gastos',
+                    style: TextStyle(fontSize: titleFontSize, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),
@@ -65,53 +73,104 @@ class ExpenseList extends StatelessWidget {
                 final expense = sortedExpenses[index];
                 return Card(
                   elevation: 2,
-                  margin: const EdgeInsets.only(bottom: 12),
+                  margin: const EdgeInsets.only(bottom: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    leading: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: _getCategoryColor(expense.category).withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        _getCategoryIcon(expense.category),
-                        color: _getCategoryColor(expense.category),
-                        size: 24,
-                      ),
-                    ),
-                    title: Text(
-                      expense.description,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    subtitle: Column(
+                  child: Padding(
+                    padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 4),
-                        Text(
-                          expense.category,
-                          style: TextStyle(
-                            color: Theme.of(context).primaryColor,
-                            fontWeight: FontWeight.w500,
-                          ),
+                        // Header row with icon, description, and amount
+                        Row(
+                          children: [
+                            Container(
+                              width: isSmallScreen ? 36 : 48,
+                              height: isSmallScreen ? 36 : 48,
+                              decoration: BoxDecoration(
+                                color: _getCategoryColor(expense.category).withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                _getCategoryIcon(expense.category),
+                                color: _getCategoryColor(expense.category),
+                                size: isSmallScreen ? 18 : 24,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    expense.description,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: isSmallScreen ? 14 : 16,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    expense.category,
+                                    style: TextStyle(
+                                      color: Theme.of(context).primaryColor,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: isSmallScreen ? 12 : 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '\$${expense.amount.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: isSmallScreen ? 16 : 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => _showDeleteDialog(context, index),
+                                  icon: Icon(Icons.delete, color: Colors.red, size: isSmallScreen ? 18 : 20),
+                                  constraints: const BoxConstraints(),
+                                  padding: const EdgeInsets.all(4),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.red.shade50,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          DateFormat('dd/MM/yyyy HH:mm').format(expense.date),
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                          ),
+
+                        // Additional details
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.access_time, size: 12, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            Text(
+                              DateFormat('dd/MM/yyyy HH:mm').format(expense.date),
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: isSmallScreen ? 10 : 12,
+                              ),
+                            ),
+                          ],
                         ),
+
                         if (expense.location != null && expense.location!.isNotEmpty) ...[
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 4),
                           Row(
                             children: [
                               const Icon(Icons.location_on, size: 12, color: Colors.grey),
@@ -119,9 +178,9 @@ class ExpenseList extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   expense.location!,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: Colors.grey,
-                                    fontSize: 12,
+                                    fontSize: isSmallScreen ? 10 : 12,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -129,15 +188,17 @@ class ExpenseList extends StatelessWidget {
                             ],
                           ),
                         ],
+
                         if (expense.amountSaved != null && expense.amountSaved! > 0) ...[
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: Colors.green.shade100,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
                                   Icons.savings,
@@ -149,7 +210,7 @@ class ExpenseList extends StatelessWidget {
                                   'Ahorrado: \$${expense.amountSaved!.toStringAsFixed(2)}',
                                   style: TextStyle(
                                     color: Colors.green.shade800,
-                                    fontSize: 12,
+                                    fontSize: isSmallScreen ? 10 : 12,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -159,37 +220,13 @@ class ExpenseList extends StatelessWidget {
                         ],
                       ],
                     ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '\$${expense.amount.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          onPressed: () => _showDeleteDialog(context, index),
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.red.shade50,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                 );
               },
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: isSmallScreen ? 12 : 16),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
               decoration: BoxDecoration(
                 color: Theme.of(context).primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
@@ -197,17 +234,17 @@ class ExpenseList extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Total de Gastos:',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: isSmallScreen ? 14 : 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
                     '\$${expenses.fold<double>(0, (sum, expense) => sum + expense.amount).toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 18,
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 16 : 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.red,
                     ),
