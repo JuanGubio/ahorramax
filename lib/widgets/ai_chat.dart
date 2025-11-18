@@ -235,212 +235,388 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
         return Opacity(
           opacity: _fadeAnimation.value,
           child: Container(
-            width: 350,
-            height: 500,
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: MediaQuery.of(context).size.height * 0.8,
+            constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
             decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white,
+                  Colors.blue.shade50,
+                  Colors.purple.shade50,
+                ],
+              ),
+              borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 30,
+                  offset: const Offset(0, 15),
+                  spreadRadius: 5,
+                ),
+                BoxShadow(
+                  color: Colors.blue.withOpacity(0.1),
                   blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  offset: const Offset(-5, -5),
                 ),
               ],
             ),
             child: Column(
               children: [
-                // Header
+                // Modern Header with Glass Effect
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                       colors: [
-                        Theme.of(context).primaryColor,
-                        Theme.of(context).primaryColor.withOpacity(0.8),
+                        const Color(0xFF6366F1), // Indigo
+                        const Color(0xFF8B5CF6), // Purple
+                        const Color(0xFFEC4899), // Pink
                       ],
                     ),
                     borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
+                      topLeft: Radius.circular(28),
+                      topRight: Radius.circular(28),
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text(
-                          '🤖',
-                          style: TextStyle(fontSize: 20),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Gemini AI',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              'IA de Google',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Botón de salir más prominente
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: TextButton.icon(
-                          onPressed: widget.onClose ?? () {
-                            // Fallback si no hay callback
-                            Navigator.of(context).pop();
-                          },
-                          icon: const Icon(Icons.close, color: Colors.white, size: 18),
-                          label: const Text(
-                            'Salir',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                        ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.purple.withOpacity(0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
                       ),
                     ],
                   ),
-                ),
-
-                // Messages
-                Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _messages.length + (_isTyping ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == _messages.length && _isTyping) {
-                        return _buildTypingIndicator();
-                      }
-
-                      final message = _messages[index];
-                      return _buildMessageBubble(message);
-                    },
-                  ),
-                ),
-
-                // Input
-                Material(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(20),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        // Voice status indicator
-                        if (_isListening) ...[
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          // AI Avatar with Glow Effect
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            margin: const EdgeInsets.only(bottom: 8),
+                            width: 50,
+                            height: 50,
                             decoration: BoxDecoration(
-                              color: Colors.red.shade50,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.red.shade200),
+                              gradient: const LinearGradient(
+                                colors: [Colors.white, Colors.white70],
+                              ),
+                              borderRadius: BorderRadius.circular(25),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.white.withOpacity(0.8),
+                                  blurRadius: 15,
+                                  spreadRadius: 2,
+                                ),
+                              ],
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            child: const Icon(
+                              Icons.smart_toy_rounded,
+                              color: Color(0xFF6366F1),
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(Icons.mic, color: Colors.red.shade600, size: 16),
-                                const SizedBox(width: 8),
                                 Text(
-                                  'Escuchando... (${(_confidence * 100).toStringAsFixed(0)}% confianza)',
+                                  'Gemini AI Assistant',
                                   style: TextStyle(
-                                    color: Colors.red.shade700,
-                                    fontSize: 12,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                Text(
+                                  'Tu asesor financiero inteligente',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ],
                             ),
                           ),
+                          // Close Button with Glass Effect
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: IconButton(
+                              onPressed: widget.onClose ?? () {
+                                Navigator.of(context).pop();
+                              },
+                              icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                              padding: const EdgeInsets.all(8),
+                              constraints: const BoxConstraints(),
+                            ),
+                          ),
                         ],
-                        Row(
+                      ),
+                      const SizedBox(height: 16),
+                      // Status Indicator
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Expanded(
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: Colors.greenAccent,
+                                borderRadius: BorderRadius.circular(4),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.greenAccent.withOpacity(0.5),
+                                    blurRadius: 6,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'En línea',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Messages Area with Gradient Background
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withOpacity(0.1),
+                          Colors.blue.shade50.withOpacity(0.3),
+                          Colors.purple.shade50.withOpacity(0.2),
+                        ],
+                      ),
+                    ),
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(20),
+                      itemCount: _messages.length + (_isTyping ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == _messages.length && _isTyping) {
+                          return _buildTypingIndicator();
+                        }
+
+                        final message = _messages[index];
+                        return _buildMessageBubble(message);
+                      },
+                    ),
+                  ),
+                ),
+
+                // Modern Input Area
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(28),
+                      bottomRight: Radius.circular(28),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      // Voice Status with Modern Design
+                      if (_isListening) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [Colors.red.shade50, Colors.pink.shade50],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.red.shade200.withOpacity(0.5),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.red.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade500,
+                                  borderRadius: BorderRadius.circular(6),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.red.shade500.withOpacity(0.5),
+                                      blurRadius: 8,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Escuchando... Confianza: ${(_confidence * 100).toStringAsFixed(0)}%',
+                                  style: TextStyle(
+                                    color: Colors.red.shade700,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
+                      // Input Row with Modern Design
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(25),
+                                border: Border.all(
+                                  color: _isListening ? Colors.red.shade200 : Colors.grey.shade200,
+                                  width: 1.5,
+                                ),
+                                boxShadow: _isListening ? [
+                                  BoxShadow(
+                                    color: Colors.red.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ] : null,
+                              ),
                               child: TextField(
                                 controller: _messageController,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
                                 decoration: InputDecoration(
-                                  hintText: _isListening ? 'Habla ahora...' : 'Pregunta sobre finanzas...',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                    borderSide: BorderSide.none,
+                                  hintText: _isListening ? '🎤 Habla ahora...' : '💬 Pregunta sobre finanzas...',
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey.shade500,
+                                    fontSize: 16,
                                   ),
-                                  filled: true,
-                                  fillColor: Colors.grey.shade100,
+                                  border: InputBorder.none,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 20,
-                                    vertical: 12,
+                                    vertical: 16,
                                   ),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _isListening ? Icons.mic_off : Icons.mic,
-                                      color: _isListening ? Colors.red : Colors.grey.shade600,
+                                  suffixIcon: Container(
+                                    margin: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      gradient: _isListening
+                                          ? LinearGradient(colors: [Colors.red.shade400, Colors.pink.shade400])
+                                          : LinearGradient(colors: [Colors.grey.shade400, Colors.grey.shade600]),
+                                      borderRadius: BorderRadius.circular(20),
                                     ),
-                                    onPressed: _listen,
+                                    child: IconButton(
+                                      icon: Icon(
+                                        _isListening ? Icons.mic_off : Icons.mic,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                      onPressed: _listen,
+                                      padding: const EdgeInsets.all(8),
+                                      constraints: const BoxConstraints(),
+                                    ),
                                   ),
                                 ),
                                 onSubmitted: (_) => _sendMessage(),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Theme.of(context).primaryColor,
-                                    Theme.of(context).primaryColor.withOpacity(0.8),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(25),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  const Color(0xFF6366F1),
+                                  const Color(0xFF8B5CF6),
+                                ],
                               ),
-                              child: IconButton(
-                                onPressed: _sendMessage,
-                                icon: const Icon(Icons.send, color: Colors.white),
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  padding: const EdgeInsets.all(12),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF6366F1).withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
+                            child: IconButton(
+                              onPressed: _sendMessage,
+                              icon: const Icon(Icons.send_rounded, color: Colors.white, size: 24),
+                              padding: const EdgeInsets.all(14),
+                              constraints: const BoxConstraints(),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 8),
+                      // Quick Suggestions
+                      if (!_isListening) ...[
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _buildQuickSuggestion('💰 ¿Cómo ahorrar más?'),
+                              const SizedBox(width: 8),
+                              _buildQuickSuggestion('🏪 ¿Qué ofertas hay hoy?'),
+                              const SizedBox(width: 8),
+                              _buildQuickSuggestion('📊 Analiza mis gastos'),
+                            ],
+                          ),
                         ),
                       ],
-                    ),
+                    ],
                   ),
                 ),
               ],
@@ -448,6 +624,43 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
           ),
         );
       },
+    );
+  }
+
+  Widget _buildQuickSuggestion(String text) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _messageController.text = text;
+        });
+        _sendMessage();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.grey.shade200,
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: Colors.grey.shade700,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
     );
   }
 
