@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models.dart';
 import 'success_notification.dart';
 
@@ -584,12 +586,277 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
   GoalPeriod _selectedPeriod = GoalPeriod.monthly;
   DateTime? _targetDate;
 
+  // Voice input
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _speechText = '';
+  double _confidence = 1.0;
+  bool _isProcessingVoice = false;
+
+  // AI processing
+  late GenerativeModel _model;
+  static const String _apiKey = 'AIzaSyBjQ9EZdV56NFAPbEBs77HiWKN4PM-If_I';
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize speech-to-text
+    _speech = stt.SpeechToText();
+
+    // Initialize AI model
+    _model = GenerativeModel(
+      model: 'gemini-2.5-flash-lite',
+      apiKey: _apiKey,
+    );
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
     _targetAmountController.dispose();
     super.dispose();
+  }
+
+  // Voice input functions
+  Future<void> _listenForGoal() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (val) => print('onStatus: $val'),
+        onError: (val) => print('onError: $val'),
+      );
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (val) => setState(() {
+            _speechText = val.recognizedWords;
+            if (val.hasConfidenceRating && val.confidence > 0) {
+              _confidence = val.confidence;
+            }
+          }),
+          localeId: 'es_ES', // Spanish locale
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+      if (_speechText.isNotEmpty) {
+        await _processVoiceInput(_speechText);
+      }
+    }
+  }
+
+  Future<void> _processVoiceInput(String voiceText) async {
+    setState(() => _isProcessingVoice = true);
+
+    try {
+      final prompt = '''Analiza el siguiente texto hablado sobre una meta financiera y extrae la información relevante.
+Texto: "$voiceText"
+
+IMPORTANTE: Identifica números como montos objetivos. Por ejemplo:
+- "Quiero ahorrar 5000 dolares para un carro" -> amount: "5000"
+- "Meta de 10000 para vacaciones" -> amount: "10000"
+- "Ahorrar 2500 mensuales" -> amount: "2500"
+
+Responde SOLO con un JSON válido en este formato exacto:
+{
+  "amount": "número decimal o null si no se menciona",
+  "title": "título breve de la meta",
+  "description": "descripción más detallada",
+  "type": "uno de estos tipos exactos: savings, emergencyFund, debtPayment, investment, vacation, purchase, custom"
+}
+
+Reglas:
+- Busca números precedidos por \$, dolares, pesos, etc. como montos
+- Si no se menciona monto, usa null
+- El título debe ser breve pero descriptivo
+- Elige el tipo de meta más apropiado de la lista
+- Si no puedes determinar algo, usa valores por defecto apropiados''';
+
+      final content = [Content.text(prompt)];
+      final response = await _model.generateContent(content);
+
+      if (response.text != null) {
+        final result = _parseVoiceResponse(response.text!);
+
+        setState(() {
+          if (result['amount'] != null && result['amount']!.isNotEmpty) {
+            _targetAmountController.text = result['amount']!;
+          }
+          if (result['title'] != null && result['title']!.isNotEmpty) {
+            _titleController.text = result['title']!;
+          }
+          if (result['description'] != null && result['description']!.isNotEmpty) {
+            _descriptionController.text = result['description']!;
+          }
+          if (result['type'] != null && result['type']!.isNotEmpty) {
+            _selectedType = _parseGoalType(result['type']!);
+          }
+        });
+
+        // Mostrar confirmación
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.mic, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Procesado: ${result['title'] ?? 'Sin título'} - \$${result['amount'] ?? 'Sin monto'}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.blue,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error processing voice: $e');
+
+      // Check for quota/rate limit errors
+      final errorString = e.toString().toLowerCase();
+      if (errorString.contains('quota') ||
+          errorString.contains('limit') ||
+          errorString.contains('rate') ||
+          errorString.contains('429')) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('La función de voz está temporalmente limitada. Puedes escribir manualmente.'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error al procesar el audio. Intenta de nuevo.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    } finally {
+      setState(() => _isProcessingVoice = false);
+    }
+  }
+
+  Map<String, String?> _parseVoiceResponse(String response) {
+    try {
+      // Limpiar la respuesta de posibles caracteres extra
+      final cleanResponse = response.trim();
+
+      // Extraer JSON del response
+      final jsonStart = cleanResponse.indexOf('{');
+      final jsonEnd = cleanResponse.lastIndexOf('}') + 1;
+      if (jsonStart != -1 && jsonEnd != -1) {
+        final jsonStr = cleanResponse.substring(jsonStart, jsonEnd);
+
+        // Buscar patrones comunes de montos
+        String? amount;
+        String? title;
+        String? description;
+        String? type;
+
+        // Buscar amount
+        final amountPattern1 = RegExp(r'"amount":\s*"([^"]*)"').firstMatch(jsonStr);
+        final amountPattern2 = RegExp(r'"amount":\s*([^,}\s]+)').firstMatch(jsonStr);
+        amount = amountPattern1?.group(1) ?? amountPattern2?.group(1);
+
+        // Buscar title
+        final titlePattern1 = RegExp(r'"title":\s*"([^"]*)"').firstMatch(jsonStr);
+        final titlePattern2 = RegExp(r'"title":\s*([^,}\s]+)').firstMatch(jsonStr);
+        title = titlePattern1?.group(1) ?? titlePattern2?.group(1);
+
+        // Buscar description
+        final descriptionPattern1 = RegExp(r'"description":\s*"([^"]*)"').firstMatch(jsonStr);
+        final descriptionPattern2 = RegExp(r'"description":\s*([^,}]+)').firstMatch(jsonStr);
+        description = descriptionPattern1?.group(1) ?? descriptionPattern2?.group(1);
+
+        // Buscar type
+        final typePattern1 = RegExp(r'"type":\s*"([^"]*)"').firstMatch(jsonStr);
+        final typePattern2 = RegExp(r'"type":\s*([^,}\s]+)').firstMatch(jsonStr);
+        type = typePattern1?.group(1) ?? typePattern2?.group(1);
+
+        // Limpiar valores
+        amount = amount?.replaceAll('"', '').trim();
+        title = title?.replaceAll('"', '').trim();
+        description = description?.replaceAll('"', '').trim();
+        type = type?.replaceAll('"', '').trim();
+
+        // Validar que amount sea un número válido
+        if (amount != null && amount.isNotEmpty) {
+          final numAmount = double.tryParse(amount.replaceAll(',', '.'));
+          if (numAmount == null || numAmount <= 0) {
+            amount = null; // Invalidar si no es un número válido
+          }
+        }
+
+        return {
+          'amount': amount,
+          'title': title,
+          'description': description,
+          'type': type,
+        };
+      }
+    } catch (e) {
+      print('Error parsing voice response: $e');
+    }
+
+    // Fallback mejorado - intentar extraer información del texto original
+    final originalText = response.toLowerCase();
+
+    // Buscar patrones comunes de montos
+    final amountPatterns = [
+      RegExp(r'(\d+(?:[.,]\d{1,2})?)\s*(?:dólares?|pesos?|\$|usd)'),
+      RegExp(r'\$?\s*(\d+(?:[.,]\d{1,2})?)'),
+    ];
+
+    String? extractedAmount;
+    for (final pattern in amountPatterns) {
+      final match = pattern.firstMatch(originalText);
+      if (match != null) {
+        extractedAmount = match.group(1)?.replaceAll(',', '.');
+        break;
+      }
+    }
+
+    return {
+      'amount': extractedAmount,
+      'title': response.length > 30 ? response.substring(0, 30) : response,
+      'description': response.length > 50 ? response.substring(0, 50) : response,
+      'type': 'savings',
+    };
+  }
+
+  GoalType _parseGoalType(String type) {
+    switch (type.toLowerCase()) {
+      case 'savings':
+        return GoalType.savings;
+      case 'emergencyfund':
+        return GoalType.emergencyFund;
+      case 'debtpayment':
+        return GoalType.debtPayment;
+      case 'investment':
+        return GoalType.investment;
+      case 'vacation':
+        return GoalType.vacation;
+      case 'purchase':
+        return GoalType.purchase;
+      case 'custom':
+        return GoalType.custom;
+      default:
+        return GoalType.savings;
+    }
   }
 
   void _submitForm() {
@@ -763,25 +1030,77 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                   _buildFormFieldCard(
                     icon: Icons.title,
                     iconColor: const Color(0xFF2ECC71),
-                    child: TextFormField(
-                      controller: _titleController,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      decoration: InputDecoration(
-                        labelText: 'Título de la meta',
-                        hintText: 'Ej: Comprar un carro',
-                        hintStyle: TextStyle(color: Colors.grey[400]),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa un título';
-                        }
-                        return null;
-                      },
+                    child: Column(
+                      children: [
+                        // Indicador de procesamiento de voz
+                        if (_isProcessingVoice) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.blue.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Procesando tu voz con IA...',
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _titleController,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Título de la meta',
+                                  hintText: 'Ej: Comprar un carro',
+                                  hintStyle: TextStyle(color: Colors.grey[400]),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Por favor ingresa un título';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: _isProcessingVoice ? null : _listenForGoal,
+                              icon: Icon(
+                                _isListening ? Icons.mic_off : Icons.mic,
+                                color: _isListening ? Colors.red : Colors.blue,
+                              ),
+                              tooltip: _isListening ? 'Escuchando...' : 'Hablar para crear meta',
+                              style: IconButton.styleFrom(
+                                backgroundColor: _isListening
+                                    ? Colors.red.withOpacity(0.1)
+                                    : Colors.blue.withOpacity(0.1),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 20),

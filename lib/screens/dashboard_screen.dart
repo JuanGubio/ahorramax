@@ -715,6 +715,121 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     return num.toStringAsFixed(2);
   }
 
+  Widget _buildBalanceCard({
+    required String title,
+    required String amount,
+    required IconData icon,
+    required List<Color> gradient,
+    bool showButtons = false,
+    bool showArrow = false,
+    IconData arrowIcon = Icons.arrow_upward,
+    String? subtitle,
+    required bool isVerySmallScreen,
+  }) {
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 120), // Minimum height to prevent collapse
+        padding: EdgeInsets.all(isVerySmallScreen ? 12 : 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: gradient),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: Colors.white, size: isVerySmallScreen ? 16 : 20),
+                ),
+                if (showButtons) ...[
+                  IconButton(
+                    onPressed: () => setState(() => showAddMoney = true),
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    iconSize: 18,
+                    constraints: const BoxConstraints(),
+                    padding: const EdgeInsets.all(6),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => setState(() => showResetConfirm = true),
+                    icon: const Icon(Icons.refresh, color: Colors.white),
+                    iconSize: 18,
+                    constraints: const BoxConstraints(),
+                    padding: const EdgeInsets.all(6),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                    ),
+                  ),
+                ] else if (showArrow) ...[
+                  Icon(arrowIcon, color: Colors.white70, size: isVerySmallScreen ? 16 : 20),
+                ],
+              ],
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: isVerySmallScreen ? 11 : 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '\$$amount',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isVerySmallScreen ? 18 : 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  if (subtitle != null && !isVerySmallScreen) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w400,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyState(String title, String subtitle, IconData icon, Color color) {
     return Center(
       child: Column(
@@ -1049,21 +1164,22 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             ),
                             const SizedBox(height: 20),
 
-                            // Estadísticas en fila - Responsive
-                            LayoutBuilder(
-                              builder: (context, constraints) {
+                            // Estadísticas en fila - Mobile Optimized
+                            Builder(
+                              builder: (context) {
                                 final screenWidth = MediaQuery.of(context).size.width;
-                                final isSmallScreen = screenWidth < 360;
-                                final cardPadding = isSmallScreen ? 12.0 : 16.0;
-                                final iconSize = isSmallScreen ? 14.0 : 16.0;
-                                final titleFontSize = isSmallScreen ? 11.0 : 12.0;
-                                final amountFontSize = isSmallScreen ? 16.0 : 18.0;
+                                final isVerySmallScreen = screenWidth < 360;
+                                final cardPadding = isVerySmallScreen ? 10.0 : 14.0;
+                                final iconSize = isVerySmallScreen ? 12.0 : 14.0;
+                                final titleFontSize = isVerySmallScreen ? 10.0 : 11.0;
+                                final amountFontSize = isVerySmallScreen ? 14.0 : 16.0;
 
                                 return Row(
                                   children: [
                                     // Gastos del día
                                     Expanded(
                                       child: Container(
+                                        constraints: const BoxConstraints(minHeight: 70),
                                         padding: EdgeInsets.all(cardPadding),
                                         decoration: BoxDecoration(
                                           color: Colors.red.withOpacity(0.1),
@@ -1075,6 +1191,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                         ),
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
                                             Row(
                                               children: [
@@ -1083,7 +1200,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                                   color: Colors.red[600],
                                                   size: iconSize,
                                                 ),
-                                                const SizedBox(width: 4),
+                                                const SizedBox(width: 3),
                                                 Text(
                                                   'Gastos',
                                                   style: TextStyle(
@@ -1094,7 +1211,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                                 ),
                                               ],
                                             ),
-                                            SizedBox(height: isSmallScreen ? 4 : 8),
+                                            SizedBox(height: isVerySmallScreen ? 2 : 4),
                                             Builder(
                                               builder: (context) {
                                                 final now = DateTime.now();
@@ -1106,6 +1223,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
                                                 return FittedBox(
                                                   fit: BoxFit.scaleDown,
+                                                  alignment: Alignment.centerLeft,
                                                   child: Text(
                                                     '-\$${dayExpenses.toStringAsFixed(2)}',
                                                     style: TextStyle(
@@ -1121,11 +1239,12 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                         ),
                                       ),
                                     ),
-                                    SizedBox(width: isSmallScreen ? 8 : 12),
+                                    SizedBox(width: isVerySmallScreen ? 6 : 10),
 
                                     // Ingresos del día
                                     Expanded(
                                       child: Container(
+                                        constraints: const BoxConstraints(minHeight: 70),
                                         padding: EdgeInsets.all(cardPadding),
                                         decoration: BoxDecoration(
                                           color: Colors.green.withOpacity(0.1),
@@ -1137,6 +1256,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                         ),
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
                                             Row(
                                               children: [
@@ -1145,7 +1265,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                                   color: Colors.green[600],
                                                   size: iconSize,
                                                 ),
-                                                const SizedBox(width: 4),
+                                                const SizedBox(width: 3),
                                                 Text(
                                                   'Ingresos',
                                                   style: TextStyle(
@@ -1156,7 +1276,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                                 ),
                                               ],
                                             ),
-                                            SizedBox(height: isSmallScreen ? 4 : 8),
+                                            SizedBox(height: isVerySmallScreen ? 2 : 4),
                                             Builder(
                                               builder: (context) {
                                                 final now = DateTime.now();
@@ -1168,6 +1288,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
                                                 return FittedBox(
                                                   fit: BoxFit.scaleDown,
+                                                  alignment: Alignment.centerLeft,
                                                   child: Text(
                                                     '+\$${dayIncomes.toStringAsFixed(2)}',
                                                     style: TextStyle(
@@ -1282,259 +1403,64 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                       const SizedBox(height: 24),
 
 
-                      // Balance Cards - Responsive Design
+                      // Balance Cards - Mobile-First Responsive Design
                       LayoutBuilder(
                         builder: (context, constraints) {
                           final screenWidth = MediaQuery.of(context).size.width;
-                          final isSmallScreen = screenWidth < 360;
+                          final isVerySmallScreen = screenWidth < 360;
+                          final isSmallScreen = screenWidth < 400;
                           final crossAxisCount = screenWidth > 600 ? 4 : 2;
-                          final cardPadding = isSmallScreen ? 12.0 : 20.0;
-                          final titleFontSize = isSmallScreen ? 12.0 : 14.0;
-                          final amountFontSize = isSmallScreen ? 20.0 : 28.0;
-                          final subtitleFontSize = isSmallScreen ? 10.0 : 12.0;
 
+                          // Ensure minimum card height and proper spacing
                           return GridView.count(
                             crossAxisCount: crossAxisCount,
-                            crossAxisSpacing: isSmallScreen ? 8 : 16,
-                            mainAxisSpacing: isSmallScreen ? 8 : 16,
+                            crossAxisSpacing: isVerySmallScreen ? 6 : (isSmallScreen ? 8 : 16),
+                            mainAxisSpacing: isVerySmallScreen ? 6 : (isSmallScreen ? 8 : 16),
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
+                            childAspectRatio: isVerySmallScreen ? 1.1 : (isSmallScreen ? 1.2 : 1.3),
                             children: [
                               // Balance Card
-                              Card(
-                                elevation: 8,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Container(
-                                  padding: EdgeInsets.all(cardPadding),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Colors.green, Color(0xFF2E7D32)],
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(0.2),
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            child: Icon(Icons.account_balance_wallet, color: Colors.white, size: isSmallScreen ? 16 : 20),
-                                          ),
-                                          if (!isSmallScreen) Row(
-                                            children: [
-                                              IconButton(
-                                                onPressed: () => setState(() => showAddMoney = true),
-                                                icon: const Icon(Icons.add, color: Colors.white),
-                                                iconSize: 18,
-                                                style: IconButton.styleFrom(
-                                                  backgroundColor: Colors.white.withOpacity(0.2),
-                                                  padding: const EdgeInsets.all(6),
-                                                ),
-                                              ),
-                                              IconButton(
-                                                onPressed: () => setState(() => showResetConfirm = true),
-                                                icon: const Icon(Icons.refresh, color: Colors.white),
-                                                iconSize: 18,
-                                                style: IconButton.styleFrom(
-                                                  backgroundColor: Colors.white.withOpacity(0.2),
-                                                  padding: const EdgeInsets.all(6),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(height: isSmallScreen ? 8 : 16),
-                                      Text(
-                                        'Dinero Actual',
-                                        style: TextStyle(color: Colors.white70, fontSize: titleFontSize),
-                                      ),
-                                      FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          '\$${_formatLargeNumber(balance)}',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: amountFontSize,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                              _buildBalanceCard(
+                                title: 'Dinero Actual',
+                                amount: _formatLargeNumber(balance),
+                                icon: Icons.account_balance_wallet,
+                                gradient: const [Colors.green, Color(0xFF2E7D32)],
+                                showButtons: !isSmallScreen,
+                                isVerySmallScreen: isVerySmallScreen,
                               ),
 
                               // Income Card
-                              Card(
-                                elevation: 8,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Container(
-                                  padding: EdgeInsets.all(cardPadding),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Colors.teal, Colors.greenAccent],
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(0.2),
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            child: Icon(Icons.trending_up, color: Colors.white, size: isSmallScreen ? 16 : 20),
-                                          ),
-                                          Icon(Icons.arrow_upward, color: Colors.white70, size: isSmallScreen ? 16 : 20),
-                                        ],
-                                      ),
-                                      SizedBox(height: isSmallScreen ? 8 : 16),
-                                      Text(
-                                        'Ingresos del Mes',
-                                        style: TextStyle(color: Colors.white70, fontSize: titleFontSize),
-                                      ),
-                                      FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          '\$${incomes.fold<double>(0, (sum, income) => sum + income.amount).toStringAsFixed(2)}',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: amountFontSize,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      if (!isSmallScreen) Text(
-                                        'Total recibido',
-                                        style: TextStyle(color: Colors.white70, fontSize: subtitleFontSize),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                              _buildBalanceCard(
+                                title: 'Ingresos del Mes',
+                                amount: incomes.fold<double>(0, (sum, income) => sum + income.amount).toStringAsFixed(2),
+                                icon: Icons.trending_up,
+                                gradient: const [Colors.teal, Colors.greenAccent],
+                                showArrow: true,
+                                subtitle: !isVerySmallScreen ? 'Total recibido' : null,
+                                isVerySmallScreen: isVerySmallScreen,
                               ),
 
                               // Expenses Card
-                              Card(
-                                elevation: 8,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Container(
-                                  padding: EdgeInsets.all(cardPadding),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Colors.red, Colors.redAccent],
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(0.2),
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            child: Icon(Icons.credit_card, color: Colors.white, size: isSmallScreen ? 16 : 20),
-                                          ),
-                                          Icon(Icons.trending_down, color: Colors.white70, size: isSmallScreen ? 16 : 20),
-                                        ],
-                                      ),
-                                      SizedBox(height: isSmallScreen ? 8 : 16),
-                                      Text(
-                                        'Gastos del Mes',
-                                        style: TextStyle(color: Colors.white70, fontSize: titleFontSize),
-                                      ),
-                                      FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          '\$${monthlyExpenses.toStringAsFixed(2)}',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: amountFontSize,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      if (!isSmallScreen) Text(
-                                        'Haz clic para ver detalles',
-                                        style: TextStyle(color: Colors.white70, fontSize: subtitleFontSize),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                              _buildBalanceCard(
+                                title: 'Gastos del Mes',
+                                amount: monthlyExpenses.toStringAsFixed(2),
+                                icon: Icons.credit_card,
+                                gradient: const [Colors.red, Colors.redAccent],
+                                showArrow: true,
+                                arrowIcon: Icons.trending_down,
+                                subtitle: !isVerySmallScreen ? 'Haz clic para ver detalles' : null,
+                                isVerySmallScreen: isVerySmallScreen,
                               ),
 
                               // Savings Card
-                              Card(
-                                elevation: 8,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Container(
-                                  padding: EdgeInsets.all(cardPadding),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Colors.blue, Colors.indigo],
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(0.2),
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            child: Icon(Icons.savings, color: Colors.white, size: isSmallScreen ? 16 : 20),
-                                          ),
-                                          Icon(Icons.trending_up, color: Colors.white70, size: isSmallScreen ? 16 : 20),
-                                        ],
-                                      ),
-                                      SizedBox(height: isSmallScreen ? 8 : 16),
-                                      Text(
-                                        'Ahorros Totales',
-                                        style: TextStyle(color: Colors.white70, fontSize: titleFontSize),
-                                      ),
-                                      FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        child: Text(
-                                          '\$${savings.toStringAsFixed(2)}',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: amountFontSize,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                              _buildBalanceCard(
+                                title: 'Ahorros Totales',
+                                amount: savings.toStringAsFixed(2),
+                                icon: Icons.savings,
+                                gradient: const [Colors.blue, Colors.indigo],
+                                showArrow: true,
+                                isVerySmallScreen: isVerySmallScreen,
                               ),
                             ],
                           );
