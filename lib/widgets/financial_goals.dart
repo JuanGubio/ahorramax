@@ -139,66 +139,99 @@ class _FinancialGoalsWidgetState extends State<FinancialGoalsWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.purple, Colors.pink],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.purple.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(16),
+              Builder(
+                builder: (context) {
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final isSmallScreen = screenWidth < 360;
+
+                  return Container(
+                    padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Colors.purple, Colors.pink],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
                       ),
-                      child: const Icon(Icons.flag, color: Colors.white, size: 28),
-                    ),
-                    const SizedBox(width: 16),
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Mis Metas Financieras',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.purple.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
                         ),
-                        Text(
-                          'Gestiona tus objetivos de ahorro',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: isSmallScreen ? 40 : 48,
+                              height: isSmallScreen ? 40 : 48,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Icon(Icons.flag, color: Colors.white, size: isSmallScreen ? 24 : 28),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Mis Metas Financieras',
+                                    style: TextStyle(
+                                      fontSize: isSmallScreen ? 18 : 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Gestiona tus objetivos de ahorro',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: isSmallScreen ? 12 : 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Botón de agregar más prominente
+                        Container(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _showCreateGoalDialog,
+                            icon: const Icon(Icons.add, size: 24),
+                            label: Text(
+                              'Nueva Meta',
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 14 : 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white.withOpacity(0.9),
+                              foregroundColor: Colors.purple,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: isSmallScreen ? 16 : 24,
+                                vertical: isSmallScreen ? 12 : 16,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 4,
+                              shadowColor: Colors.white.withOpacity(0.3),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: _showCreateGoalDialog,
-                      icon: const Icon(Icons.add, size: 28),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.white.withOpacity(0.2),
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
               const SizedBox(height: 16),
 
