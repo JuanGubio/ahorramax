@@ -14,18 +14,21 @@ class IncomeList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+
     if (incomes.isEmpty) {
       return Card(
         elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Padding(
-          padding: EdgeInsets.all(24),
+        child: Padding(
+          padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
           child: Center(
             child: Text(
               'No hay ingresos registrados',
-              style: TextStyle(color: Colors.grey, fontSize: 16),
+              style: TextStyle(color: Colors.grey, fontSize: isSmallScreen ? 14 : 16),
             ),
           ),
         ),
@@ -42,21 +45,21 @@ class IncomeList extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.trending_up, color: Colors.green.shade600, size: 24),
+                Icon(Icons.trending_up, color: Colors.green.shade600, size: isSmallScreen ? 20 : 24),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Lista de Ingresos',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: isSmallScreen ? 16 : 18, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: isSmallScreen ? 12 : 16),
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -69,70 +72,99 @@ class IncomeList extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    leading: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: _getSourceColor(income.source).withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        _getSourceIcon(income.source),
-                        color: _getSourceColor(income.source),
-                        size: 24,
-                      ),
-                    ),
-                    title: Text(
-                      income.description,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Padding(
+                    padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+                    child: Column(
                       children: [
-                        const SizedBox(height: 4),
-                        Text(
-                          income.source,
-                          style: TextStyle(
-                            color: Colors.green.shade600,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          DateFormat('dd/MM/yyyy HH:mm').format(income.date),
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '+\$${income.amount.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          onPressed: () => _showDeleteDialog(context, index),
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.red.shade50,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                        // Header row with icon, description, and amount
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: isSmallScreen ? 32 : 40,
+                              height: isSmallScreen ? 32 : 40,
+                              margin: const EdgeInsets.only(top: 2),
+                              decoration: BoxDecoration(
+                                color: _getSourceColor(income.source).withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                _getSourceIcon(income.source),
+                                color: _getSourceColor(income.source),
+                                size: isSmallScreen ? 16 : 20,
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    income.description,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: isSmallScreen ? 13 : 15,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    income.source,
+                                    style: TextStyle(
+                                      color: Colors.green.shade600,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: isSmallScreen ? 11 : 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '+\$${income.amount.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: isSmallScreen ? 14 : 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                IconButton(
+                                  onPressed: () => _showDeleteDialog(context, index),
+                                  icon: Icon(Icons.delete, color: Colors.red, size: isSmallScreen ? 16 : 18),
+                                  constraints: const BoxConstraints(),
+                                  padding: const EdgeInsets.all(2),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.red.shade50,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+
+                        // Additional details - more compact
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(Icons.access_time, size: 10, color: Colors.grey),
+                            const SizedBox(width: 2),
+                            Text(
+                              DateFormat('dd/MM HH:mm').format(income.date),
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: isSmallScreen ? 9 : 11,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -140,9 +172,9 @@ class IncomeList extends StatelessWidget {
                 );
               },
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: isSmallScreen ? 12 : 16),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
               decoration: BoxDecoration(
                 color: Colors.green.shade50,
                 borderRadius: BorderRadius.circular(12),
@@ -150,17 +182,17 @@ class IncomeList extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Total de Ingresos:',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: isSmallScreen ? 14 : 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
                     '+\$${incomes.fold<double>(0, (sum, income) => sum + income.amount).toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 18,
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 16 : 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.green,
                     ),
