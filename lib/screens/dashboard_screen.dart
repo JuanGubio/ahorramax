@@ -719,13 +719,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     }
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openFinancialChatbot,
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.smart_toy),
-        tooltip: 'Asistente Financiero IA',
-      ),
       bottomNavigationBar: showTutorial ? null : CustomNavBar(
         onHomeTap: () {
           // Scroll to top or stay on dashboard

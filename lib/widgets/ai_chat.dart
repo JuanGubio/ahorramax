@@ -28,7 +28,7 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
   double _confidence = 1.0;
 
   // API Key de Gemini
-  static const String _apiKey = 'AIzaSyA1tTTe2loIRAAUNnkYIIVhwP0TvTck_Ac';
+  static const String _apiKey = 'AIzaSyBjQ9EZdV56NFAPbEBs77HiWKN4PM-If_I';
 
   @override
   void initState() {
@@ -166,6 +166,16 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
       }
     } catch (e) {
       print('Error al conectar con Gemini API: $e');
+
+      // Check for quota/rate limit errors
+      final errorString = e.toString().toLowerCase();
+      if (errorString.contains('quota') ||
+          errorString.contains('limit') ||
+          errorString.contains('rate') ||
+          errorString.contains('429')) {
+        return '¡Hola! Soy el asistente financiero de AhorraMax. Actualmente estoy usando una clave de API de demostración que ha alcanzado su límite gratuito. Para continuar usando todas las funciones de IA, puedes obtener tu propia clave gratuita de Google AI Studio en https://makersuite.google.com/app/apikey y reemplazarla en la configuración de la app. Mientras tanto, puedo ayudarte con consejos financieros básicos. ¿En qué puedo asistirte?';
+      }
+
       return _generateFallbackResponse(userMessage);
     }
   }

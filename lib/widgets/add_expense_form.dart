@@ -38,7 +38,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
 
   // AI processing
   late GenerativeModel _model;
-  static const String _apiKey = 'AIzaSyA1tTTe2loIRAAUNnkYIIVhwP0TvTck_Ac';
+  static const String _apiKey = 'AIzaSyBjQ9EZdV56NFAPbEBs77HiWKN4PM-If_I';
 
   // Controllers for proper text field management
   late TextEditingController _descriptionController;
@@ -232,13 +232,31 @@ Reglas:
       }
     } catch (e) {
       print('Error processing voice: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Error al procesar el audio. Intenta de nuevo.'),
-            backgroundColor: Colors.orange,
-          ),
-        );
+
+      // Check for quota/rate limit errors
+      final errorString = e.toString().toLowerCase();
+      if (errorString.contains('quota') ||
+          errorString.contains('limit') ||
+          errorString.contains('rate') ||
+          errorString.contains('429')) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('La función de voz está temporalmente limitada. Puedes escribir manualmente o usar sugerencias básicas.'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error al procesar el audio. Intenta de nuevo.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
       }
     } finally {
       setState(() => _isProcessingVoice = false);
@@ -825,6 +843,7 @@ Reglas:
                         hintText: '¿En qué gastaste? (Escribe o habla)',
                         fieldType: 'description',
                         controller: _descriptionController,
+                        onChanged: (value) => setState(() => description = value),
                         onSuggestionSelected: (suggestion) {
                           setState(() {
                             description = suggestion;

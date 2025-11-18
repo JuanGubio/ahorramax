@@ -62,8 +62,8 @@ class _MoneyMascotState extends State<MoneyMascot> with TickerProviderStateMixin
               );
             },
             child: Container(
-              width: 90,
-              height: 90,
+              width: 70,
+              height: 70,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
@@ -75,164 +75,13 @@ class _MoneyMascotState extends State<MoneyMascot> with TickerProviderStateMixin
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.blue.withOpacity(0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                  BoxShadow(
-                    color: Colors.purple.withOpacity(0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
               ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Cuerpo principal (círculo azul-púrpura)
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.blue.shade400,
-                          Colors.purple.shade300,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                  ),
-
-                  // Ojos grandes y expresivos
-                  Positioned(
-                    top: 18,
-                    left: 18,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            blurRadius: 2,
-                            offset: const Offset(1, 1),
-                          ),
-                        ],
-                      ),
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        margin: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.black.withOpacity(_eyeAnimation.value),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 18,
-                    right: 18,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            blurRadius: 2,
-                            offset: const Offset(1, 1),
-                          ),
-                        ],
-                      ),
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        margin: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.black.withOpacity(_eyeAnimation.value),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Boca sonriente más expresiva
-                  Positioned(
-                    bottom: 22,
-                    child: Container(
-                      width: 24,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 2,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Container(
-                          width: 16,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Mejillas rosadas
-                  Positioned(
-                    top: 28,
-                    left: 12,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.pink.withOpacity(0.4),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 28,
-                    right: 12,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.pink.withOpacity(0.4),
-                      ),
-                    ),
-                  ),
-
-                  // Logo de Money Mascot en el centro
-                  const Center(
-                    child: Text(
-                      '💰',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
+              child: const Center(
+                child: CircleAvatar(
+                  radius: 28,
+                  backgroundImage: AssetImage('assets/images/logo.png'),
+                  backgroundColor: Colors.white,
+                ),
               ),
             ),
           ),

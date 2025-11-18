@@ -4,6 +4,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 class SmartAutocomplete extends StatefulWidget {
   final String hintText;
   final Function(String) onSuggestionSelected;
+  final Function(String)? onChanged;
   final TextEditingController? controller;
   final String fieldType; // 'description', 'category', 'amount'
 
@@ -11,6 +12,7 @@ class SmartAutocomplete extends StatefulWidget {
     super.key,
     required this.hintText,
     required this.onSuggestionSelected,
+    this.onChanged,
     this.controller,
     this.fieldType = 'description',
   });
@@ -26,7 +28,7 @@ class _SmartAutocompleteState extends State<SmartAutocomplete> {
   final LayerLink _layerLink = LayerLink();
   late GenerativeModel _model;
 
-  static const String _apiKey = 'AIzaSyA1tTTe2loIRAAUNnkYIIVhwP0TvTck_Ac';
+  static const String _apiKey = 'AIzaSyBjQ9EZdV56NFAPbEBs77HiWKN4PM-If_I';
 
   @override
   void initState() {
@@ -72,7 +74,24 @@ class _SmartAutocompleteState extends State<SmartAutocomplete> {
       }
     } catch (e) {
       print('Error getting suggestions: $e');
-      setState(() => _isLoading = false);
+
+      // Check for quota/rate limit errors
+      final errorString = e.toString().toLowerCase();
+      if (errorString.contains('quota') ||
+          errorString.contains('limit') ||
+          errorString.contains('rate') ||
+          errorString.contains('429')) {
+        // Show fallback suggestions without AI
+        final fallbackSuggestions = _getFallbackSuggestions(input);
+        setState(() {
+          _suggestions.clear();
+          _suggestions.addAll(fallbackSuggestions);
+          _isLoading = false;
+        });
+        _showSuggestions();
+      } else {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -284,6 +303,7 @@ class _SmartAutocompleteState extends State<SmartAutocomplete> {
                 ),
         ),
         onChanged: (value) {
+          widget.onChanged?.call(value);
           if (value.length >= 2) {
             _getSuggestions(value);
           } else {
