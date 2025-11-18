@@ -998,36 +998,13 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               shaderCallback: (bounds) => const LinearGradient(
                                 colors: [Color(0xFF2ECC71), Color(0xFF4FA3FF)],
                               ).createShader(bounds),
-                              child: Row(
-                                children: [
-                                  const Text(
-                                    'AhorraMax',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    width: 24,
-                                    height: 24,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: const Center(
-                                      child: Text(
-                                        'G',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              child: const Text(
+                                'AhorraMax',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                             const Spacer(),
