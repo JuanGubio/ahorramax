@@ -2155,22 +2155,22 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
   IconData _getCategoryIcon(String category) {
     switch (category) {
-      case 'Restaurantes':
+      case 'comida':
         return Icons.restaurant;
-      case 'Transporte':
+      case 'transporte':
         return Icons.directions_car;
-      case 'Entretenimiento':
-        return Icons.tv;
-      case 'Compras':
+      case 'compras':
         return Icons.shopping_bag;
-      case 'Servicios':
-        return Icons.build;
-      case 'Salud':
-        return Icons.favorite;
-      case 'Educación':
+      case 'salud':
+        return Icons.local_hospital;
+      case 'entretenimiento':
+        return Icons.movie;
+      case 'educación':
         return Icons.school;
-      case 'Otros':
-        return Icons.more_horiz;
+      case 'servicios':
+        return Icons.build;
+      case 'hogar':
+        return Icons.home;
       default:
         return Icons.category;
     }
