@@ -1066,7 +1066,9 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                     label: Text(category),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-                                      foregroundColor: Theme.of(context).primaryColor,
+                                      foregroundColor: Theme.of(context).brightness == Brightness.dark
+                                          ? Colors.white
+                                          : Colors.black,
                                     ),
                                   )).toList(),
                                 ),
