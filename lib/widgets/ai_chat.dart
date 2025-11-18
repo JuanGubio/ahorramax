@@ -50,7 +50,7 @@ class _AIChatState extends State<AIChat> with TickerProviderStateMixin {
     );
 
     // Mensaje de bienvenida
-    _addBotMessage('¡Hola! Soy Gemini AI, tu asistente financiero inteligente. ¿En qué puedo ayudarte hoy? 🎙️ También puedes hablar presionando el micrófono.');
+    _addBotMessage('¡Hola! 👋 Soy Gemini AI, tu asistente financiero inteligente de Google. ¿En qué puedo ayudarte hoy? 💰🎙️ También puedes hablar presionando el micrófono.');
   }
 
   @override
@@ -185,43 +185,43 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
 
     // Respuestas basadas en categorías
     if (message.contains('comida') || message.contains('restaurante') || message.contains('pizza')) {
-      return '¡Buena elección! Te recomiendo revisar las ofertas de Pizza Hut hoy - tienen 2x1 en pizzas medianas. También puedes cocinar en casa para ahorrar más. ¿Te ayudo con alguna receta económica?';
+      return '🍕 ¡Buena elección! Te recomiendo revisar las ofertas de Pizza Hut hoy - tienen 2x1 en pizzas medianas. También puedes cocinar en casa para ahorrar más 🏠. ¿Te ayudo con alguna receta económica? 👨‍🍳';
     }
 
     if (message.contains('transporte') || message.contains('bus') || message.contains('taxi')) {
-      return 'Para transporte, considera usar la tarjeta Ecovía - tiene descuentos. Si vas a lugares cercanos, ¡la bicicleta es gratis y saludable! ¿A dónde necesitas ir?';
+      return '🚌 Para transporte, considera usar la tarjeta Ecovía - tiene descuentos. Si vas a lugares cercanos, ¡la bicicleta es gratis y saludable! 🚲 ¿A dónde necesitas ir?';
     }
 
     if (message.contains('supermercado') || message.contains('compras') || message.contains('tienda')) {
-      return 'Mi Comisariato tiene 30% descuento en lácteos esta semana. Tía ofrece productos de limpieza con 20% off. ¿Qué necesitas comprar?';
+      return '🛒 Mi Comisariato tiene 30% descuento en lácteos esta semana. Tía ofrece productos de limpieza con 20% off. ¿Qué necesitas comprar?';
     }
 
     if (message.contains('ahorro') || message.contains('dinero') || message.contains('presupuesto')) {
-      return 'Excelente pregunta sobre ahorro. Te sugiero: 1) Establece un presupuesto semanal, 2) Revisa ofertas antes de comprar, 3) Cocina en casa. ¿Quieres que analice tus gastos recientes?';
+      return '💰 Excelente pregunta sobre ahorro. Te sugiero: 1️⃣ Establece un presupuesto semanal, 2️⃣ Revisa ofertas antes de comprar, 3️⃣ Cocina en casa. ¿Quieres que analice tus gastos recientes? 📈';
     }
 
     if (message.contains('gasto') || message.contains('cuánto') || message.contains('precio')) {
-      return '📊 Puedo ayudarte a rastrear tus gastos. Registra cada compra en la app y te daré recomendaciones personalizadas. ¿Qué tipo de gasto quieres analizar?';
+      return '📊 Puedo ayudarte a rastrear tus gastos. Registra cada compra en la app y te daré recomendaciones personalizadas. ¿Qué tipo de gasto quieres analizar? 🔍';
     }
 
     if (message.contains('oferta') || message.contains('descuento') || message.contains('promoción')) {
-      return '🎉 ¡Genial! Hoy tenemos: Pizza Hut 2x1, Mi Comisariato 30% en lácteos, Tía productos de limpieza con descuento. ¿En qué categoría te interesa?';
+      return '🎉 ¡Genial! Hoy tenemos: Pizza Hut 2x1 🍕, Mi Comisariato 30% en lácteos 🥛, Tía productos de limpieza con descuento 🧹. ¿En qué categoría te interesa?';
     }
 
     if (message.contains('hola') || message.contains('hi') || message.contains('buenos')) {
-      return '¡Hola! 👋 Soy Gemini AI, el asistente de IA de Google integrado en AhorraMax. Estoy aquí para ayudarte con tus finanzas, recomendaciones de ahorro y ofertas locales. ¿En qué puedo asistirte hoy?';
+      return '¡Hola! 👋 Soy Gemini AI, el asistente de IA de Google integrado en AhorraMax. Estoy aquí para ayudarte con tus finanzas 💰, recomendaciones de ahorro 📈 y ofertas locales 🏷️. ¿En qué puedo asistirte hoy?';
     }
 
     if (message.contains('gracias') || message.contains('thank')) {
-      return '¡De nada! 😊 Estoy aquí para ayudarte a ahorrar y tomar mejores decisiones financieras. ¿Hay algo más en lo que pueda asistirte?';
+      return '¡De nada! 😊 Estoy aquí para ayudarte a ahorrar y tomar mejores decisiones financieras. ¿Hay algo más en lo que pueda asistirte? 🤝';
     }
 
     // Respuestas genéricas
     final genericResponses = [
-      '¡Excelente pregunta! Déjame pensar en la mejor manera de ayudarte con eso. 💭',
-      'Entiendo tu consulta. Basándome en patrones similares, te recomiendo revisar las ofertas locales primero.',
-      'Buena observación. El ahorro inteligente viene de pequeñas decisiones diarias. ¿Quieres que te dé tips específicos?',
-      'Interesante. Puedo analizar tus hábitos de gasto para darte recomendaciones más personalizadas.',
+      '¡Excelente pregunta! 💭 Déjame pensar en la mejor manera de ayudarte con eso.',
+      'Entiendo tu consulta 🤔. Basándome en patrones similares, te recomiendo revisar las ofertas locales primero 🏷️.',
+      'Buena observación 👀. El ahorro inteligente viene de pequeñas decisiones diarias. ¿Quieres que te dé tips específicos? 💡',
+      'Interesante 📊. Puedo analizar tus hábitos de gasto para darte recomendaciones más personalizadas.',
     ];
 
     return genericResponses[DateTime.now().millisecondsSinceEpoch % genericResponses.length];
@@ -671,8 +671,12 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
     final isBot = message['isBot'] as bool;
     final text = message['text'] as String;
 
+    if (isBot) {
+      return _buildBotMessageBubble(text);
+    }
+
     return Align(
-      alignment: isBot ? Alignment.centerLeft : Alignment.centerRight,
+      alignment: Alignment.centerRight,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -680,22 +684,117 @@ Responde de manera inteligente, útil y enfocada en finanzas personales. Mencion
           maxWidth: MediaQuery.of(context).size.width * 0.7,
         ),
         decoration: BoxDecoration(
-          color: isBot
-              ? Colors.grey.shade100
-              : Theme.of(context).primaryColor,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: isBot ? const Radius.circular(4) : const Radius.circular(16),
-            bottomRight: isBot ? const Radius.circular(16) : const Radius.circular(4),
+          color: Theme.of(context).primaryColor,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+            bottomLeft: Radius.circular(16),
+            bottomRight: Radius.circular(4),
           ),
         ),
         child: Text(
           text,
-          style: TextStyle(
-            color: isBot ? Theme.of(context).textTheme.bodyLarge?.color : Colors.white,
+          style: const TextStyle(
+            color: Colors.white,
             fontSize: 14,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBotMessageBubble(String text) {
+    // Detect keywords to add relevant icons
+    IconData? icon;
+    Color? iconColor;
+
+    final lowerText = text.toLowerCase();
+
+    if (lowerText.contains('dinero') || lowerText.contains('ahorro') || lowerText.contains('presupuesto')) {
+      icon = Icons.savings;
+      iconColor = Colors.green;
+    } else if (lowerText.contains('comida') || lowerText.contains('restaurante') || lowerText.contains('pizza')) {
+      icon = Icons.restaurant;
+      iconColor = Colors.orange;
+    } else if (lowerText.contains('transporte') || lowerText.contains('bus') || lowerText.contains('taxi')) {
+      icon = Icons.directions_car;
+      iconColor = Colors.blue;
+    } else if (lowerText.contains('supermercado') || lowerText.contains('compras') || lowerText.contains('tienda')) {
+      icon = Icons.shopping_cart;
+      iconColor = Colors.purple;
+    } else if (lowerText.contains('salud') || lowerText.contains('médico') || lowerText.contains('hospital')) {
+      icon = Icons.favorite;
+      iconColor = Colors.red;
+    } else if (lowerText.contains('educación') || lowerText.contains('estudio') || lowerText.contains('escuela')) {
+      icon = Icons.school;
+      iconColor = Colors.indigo;
+    } else if (lowerText.contains('entretenimiento') || lowerText.contains('cine') || lowerText.contains('música')) {
+      icon = Icons.movie;
+      iconColor = Colors.pink;
+    } else if (lowerText.contains('oferta') || lowerText.contains('descuento') || lowerText.contains('promoción')) {
+      icon = Icons.local_offer;
+      iconColor = Colors.teal;
+    } else if (lowerText.contains('gasto') || lowerText.contains('cuánto') || lowerText.contains('precio')) {
+      icon = Icons.receipt;
+      iconColor = Colors.red;
+    } else if (lowerText.contains('hola') || lowerText.contains('buenos') || lowerText.contains('ayuda')) {
+      icon = Icons.waving_hand;
+      iconColor = Colors.amber;
+    } else if (lowerText.contains('gracias') || lowerText.contains('thank')) {
+      icon = Icons.thumb_up;
+      iconColor = Colors.blue;
+    }
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.7,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(4),
+            topRight: Radius.circular(16),
+            bottomLeft: Radius.circular(16),
+            bottomRight: Radius.circular(16),
+          ),
+          border: Border.all(
+            color: Colors.grey.shade200,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (icon != null) ...[
+              Container(
+                padding: const EdgeInsets.all(8),
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: (iconColor ?? Colors.grey).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: iconColor ?? Colors.grey,
+                  size: 20,
+                ),
+              ),
+            ],
+            Expanded(
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                  fontSize: 14,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
