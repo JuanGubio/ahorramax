@@ -9,6 +9,7 @@ import 'screens/welcome_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/wallet_screen.dart';
 import 'screen/login_screen.dart' as login;
 import 'services/user_data_service.dart';
 
