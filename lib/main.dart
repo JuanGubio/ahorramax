@@ -44,6 +44,12 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  void _setLightTheme() {
+    setState(() {
+      _themeMode = ThemeMode.light;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -109,7 +115,7 @@ class _MyAppState extends State<MyApp> {
         '/welcome': (context) => const WelcomeScreen(),
         '/login': (context) => const login.LoginScreen(),
         '/register': (context) => const RegisterScreen(),
-        '/dashboard': (context) => DashboardScreen(toggleTheme: _toggleTheme),
+        '/dashboard': (context) => DashboardScreen(toggleTheme: _toggleTheme, setLightTheme: _setLightTheme),
         '/profile': (context) => ProfileScreen(toggleTheme: _toggleTheme),
       },
       onUnknownRoute: (settings) {
@@ -197,7 +203,9 @@ Future<void> cargarDatosUsuario() async {
 
 /// Manejador de autenticación
 class AuthWrapper extends StatelessWidget {
-  const AuthWrapper({super.key});
+  final VoidCallback? setLightTheme;
+
+  const AuthWrapper({super.key, this.setLightTheme});
 
   @override
   Widget build(BuildContext context) {
@@ -213,7 +221,7 @@ class AuthWrapper extends StatelessWidget {
         if (snapshot.hasData) {
           // Llama a la creación automática de datos
           cargarDatosUsuario();
-          return const DashboardScreen();
+          return DashboardScreen(setLightTheme: setLightTheme);
         }
 
         return const login.LoginScreen();
