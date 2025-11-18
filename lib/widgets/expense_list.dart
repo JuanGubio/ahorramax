@@ -240,12 +240,6 @@ class ExpenseList extends StatelessWidget {
               onPressed: () {
                 onDeleteExpense(index);
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Gasto eliminado correctamente'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,

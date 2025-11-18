@@ -450,21 +450,6 @@ Reglas:
         widget.onAddExpense(expenseData);
         print("Callback local ejecutado");
 
-        // Mostrar mensaje de éxito
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 8),
-                Text("¡Gasto guardado correctamente!"),
-              ],
-            ),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-
         // Reset form
         setState(() {
           category = "";

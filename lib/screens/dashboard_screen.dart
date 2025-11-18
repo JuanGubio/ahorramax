@@ -1760,7 +1760,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
               color: Colors.black.withOpacity(0.5),
               child: Center(
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 400),
+                  constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
                   margin: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -1788,10 +1788,11 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(28),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                         // Header
                         Container(
                           padding: const EdgeInsets.all(20),
@@ -2047,7 +2048,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             ],
                           ),
                         ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

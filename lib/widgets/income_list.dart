@@ -193,12 +193,6 @@ class IncomeList extends StatelessWidget {
               onPressed: () {
                 onDeleteIncome(index);
                 Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Ingreso eliminado correctamente'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
