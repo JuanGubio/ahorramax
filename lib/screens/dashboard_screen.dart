@@ -15,6 +15,7 @@ import '../widgets/tutorial_overlay.dart';
 import '../widgets/financial_goals.dart';
 import '../widgets/weekly_insights.dart';
 import '../widgets/financial_chatbot.dart';
+import '../widgets/custom_nav_bar.dart';
 import '../models.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -677,6 +678,13 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
         foregroundColor: Colors.white,
         child: const Icon(Icons.smart_toy),
         tooltip: 'Asistente Financiero IA',
+      ),
+      bottomNavigationBar: CustomNavBar(
+        onHomeTap: () {
+          // Scroll to top or stay on dashboard
+        },
+        onAddTap: () => setState(() => showAddMoney = true),
+        onWalletTap: () => Navigator.pushNamed(context, '/profile'),
       ),
       body: Stack(
         children: [
