@@ -148,7 +148,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          decorationColor: Colors.black,
+                        ),
                         decoration: InputDecoration(
                           hintText: "tu@email.com",
                           hintStyle: const TextStyle(color: Colors.grey, fontSize: 16),
@@ -177,7 +182,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       TextFormField(
                         controller: _passwordController,
                         obscureText: true,
-                        style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          decorationColor: Colors.black,
+                        ),
                         decoration: InputDecoration(
                           hintText: "Tu contraseña",
                           hintStyle: const TextStyle(color: Colors.grey, fontSize: 16),

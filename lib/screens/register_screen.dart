@@ -259,7 +259,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       // Name field
                       TextFormField(
                         controller: _nameController,
-                        style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          decorationColor: Colors.black,
+                        ),
                         decoration: InputDecoration(
                           hintText: "Tu nombre completo",
                           hintStyle: const TextStyle(color: Colors.grey, fontSize: 16),
@@ -289,7 +294,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          decorationColor: Colors.black,
+                        ),
                         decoration: InputDecoration(
                           hintText: "tu@email.com",
                           hintStyle: const TextStyle(color: Colors.grey, fontSize: 16),
@@ -319,7 +329,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
-                        style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          decorationColor: Colors.black,
+                        ),
                         decoration: InputDecoration(
                           hintText: "Mínimo 6 caracteres",
                           hintStyle: const TextStyle(color: Colors.grey, fontSize: 16),
@@ -358,7 +373,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextFormField(
                         controller: _confirmPasswordController,
                         obscureText: _obscureConfirmPassword,
-                        style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          decorationColor: Colors.black,
+                        ),
                         decoration: InputDecoration(
                           hintText: "Repite tu contraseña",
                           hintStyle: const TextStyle(color: Colors.grey, fontSize: 16),

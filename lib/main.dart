@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 import 'screens/splash_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/dashboard_screen_v2.dart';
 import 'screens/register_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screen/login_screen.dart' as login;
@@ -105,11 +106,11 @@ class _MyAppState extends State<MyApp> {
       themeMode: _themeMode,
       initialRoute: '/',
       routes: {
-        '/': (context) => const SplashScreen(),
-        '/welcome': (context) => const WelcomeScreen(),
-        '/login': (context) => const login.LoginScreen(),
-        '/register': (context) => const RegisterScreen(),
-        '/dashboard': (context) => DashboardScreen(toggleTheme: _toggleTheme),
+        '/': (context) => const AuthWrapper(),
+        '/welcome': (context) => AuthGuard(child: const WelcomeScreen()),
+        '/login': (context) => AuthGuard(child: const login.LoginScreen()),
+        '/register': (context) => AuthGuard(child: const RegisterScreen()),
+        '/dashboard': (context) => DashboardScreenV2(toggleTheme: _toggleTheme),
         '/profile': (context) => ProfileScreen(toggleTheme: _toggleTheme),
       },
       onUnknownRoute: (settings) {
@@ -195,10 +196,15 @@ Future<void> cargarDatosUsuario() async {
   await userService.crearPerfilAutomatico();
 }
 
-/// Manejador de autenticación
-class AuthWrapper extends StatelessWidget {
+/// Manejador de autenticación para la ruta raíz
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
 
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -211,12 +217,56 @@ class AuthWrapper extends StatelessWidget {
         }
 
         if (snapshot.hasData) {
-          // Llama a la creación automática de datos
-          cargarDatosUsuario();
-          return const DashboardScreen();
+          // Usuario autenticado - ir al dashboard
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              Navigator.of(context).pushNamedAndRemoveUntil('/dashboard', (route) => false);
+            }
+          });
+          return const SizedBox.shrink();
         }
 
-        return const login.LoginScreen();
+        // Usuario no autenticado - mostrar splash screen
+        return const SplashScreen();
+      },
+    );
+  }
+}
+
+/// Widget de protección de rutas para pantallas de autenticación
+class AuthGuard extends StatefulWidget {
+  final Widget child;
+
+  const AuthGuard({super.key, required this.child});
+
+  @override
+  State<AuthGuard> createState() => _AuthGuardState();
+}
+
+class _AuthGuardState extends State<AuthGuard> {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.hasData) {
+          // Usuario ya autenticado - redirigir al dashboard inmediatamente
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              Navigator.of(context).pushNamedAndRemoveUntil('/dashboard', (route) => false);
+            }
+          });
+          return const SizedBox.shrink();
+        }
+
+        // Usuario no autenticado - mostrar la pantalla de autenticación
+        return widget.child;
       },
     );
   }

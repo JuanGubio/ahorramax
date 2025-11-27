@@ -3,6 +3,7 @@
  import 'package:firebase_auth/firebase_auth.dart';
  import 'package:speech_to_text/speech_to_text.dart' as stt;
  import 'package:google_generative_ai/google_generative_ai.dart';
+ import '../services/usage_limits_service.dart';
  import '../models.dart';
 
 class AddIncomeForm extends StatefulWidget {
@@ -30,7 +31,7 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
 
   // AI processing
   late GenerativeModel _model;
-  static const String _apiKey = 'AIzaSyA1tTTe2loIRAAUNnkYIIVhwP0TvTck_Ac';
+  static const String _apiKey = 'AIzaSyBxg6Ot1ZHCeXMnbHA8t9eVC9CL8aiJKWo';
 
   // Controllers for proper text field management
   late TextEditingController _descriptionController;
@@ -124,6 +125,10 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
   // Voice input functions
   Future<void> _listenForIncome() async {
     if (!_isListening) {
+      // Verificar límites de voz
+      final canUseVoice = await UsageLimitsService.canUseVoice(context);
+      if (!canUseVoice) return;
+
       bool available = await _speech.initialize(
         onStatus: (val) => print('onStatus: $val'),
         onError: (val) => print('onError: $val'),
@@ -144,7 +149,19 @@ class _AddIncomeFormState extends State<AddIncomeForm> {
       setState(() => _isListening = false);
       _speech.stop();
       if (_speechText.isNotEmpty) {
-        await _processVoiceInputIncome(_speechText);
+        // Mostrar diálogo de confirmación para voz
+        UsageLimitsService.showVoiceValidationDialog(
+          context,
+          _speechText,
+          () async {
+            await UsageLimitsService.incrementVoiceUsage();
+            await _processVoiceInputIncome(_speechText);
+          },
+          () {
+            // Limpiar texto y reiniciar
+            _speechText = '';
+          }
+        );
       }
     }
   }

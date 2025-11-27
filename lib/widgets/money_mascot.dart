@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'ai_chat.dart';
 
 class MoneyMascot extends StatefulWidget {
   const MoneyMascot({super.key});
@@ -55,10 +54,19 @@ class _MoneyMascotState extends State<MoneyMascot> with TickerProviderStateMixin
           offset: Offset(0, -_bounceAnimation.value),
           child: GestureDetector(
             onTap: () {
-              // Abrir chat de Gemini AI
-              showDialog(
-                context: context,
-                builder: (context) => const AIChat(initialCategory: 'general'),
+              // Mostrar mensaje sobre el chatbot disponible
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Row(
+                    children: [
+                      Icon(Icons.smart_toy, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text('¡Hola! El asistente IA está disponible en el botón azul flotante'),
+                    ],
+                  ),
+                  backgroundColor: Colors.blue,
+                  duration: Duration(seconds: 3),
+                ),
               );
             },
             child: Container(

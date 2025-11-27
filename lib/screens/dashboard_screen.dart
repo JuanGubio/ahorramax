@@ -13,8 +13,9 @@ import '../widgets/streak_tracker.dart';
 import '../widgets/money_mascot.dart';
 import '../widgets/tutorial_overlay.dart';
 import '../widgets/financial_goals.dart';
-import '../widgets/weekly_insights.dart';
 import '../widgets/financial_chatbot.dart';
+import '../services/usage_limits_service.dart';
+import '../services/streak_service.dart';
 import '../models.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -28,10 +29,12 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> with TickerProviderStateMixin {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final StreakService _streakService = StreakService();
   String userName = "Usuario";
   double balance = 0;
   double savings = 0;
   double monthlyExpenses = 0;
+  double monthlyIncomes = 0;
   final List<Expense> userExpenses = [];
   final List<Income> incomes = [];
   bool showResetConfirm = false;
@@ -57,6 +60,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
     _loadTutorialStatus();
     _playSound("enter");
+    _streakService.initialize(); // Inicializar servicio de rachas
     _cargarDatosUsuario();
   }
 
@@ -64,6 +68,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
   void dispose() {
     _audioPlayer.dispose();
     _animationController.dispose();
+    _streakService.dispose(); // Liberar servicio de rachas
     super.dispose();
   }
 
@@ -106,6 +111,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
       List<Expense> loadedExpenses = [];
       double totalExpenses = 0;
+      double currentMonthExpenses = 0;
+      final now = DateTime.now();
 
       for (var doc in expensesSnapshot.docs) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
@@ -120,6 +127,11 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
         );
         loadedExpenses.add(expense);
         totalExpenses += expense.amount;
+
+        // Calcular gastos del mes actual
+        if (expense.date.year == now.year && expense.date.month == now.month) {
+          currentMonthExpenses += expense.amount;
+        }
       }
 
       // Cargar ingresos
@@ -131,6 +143,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
           .get();
 
       List<Income> loadedIncomes = [];
+      double currentMonthIncomes = 0;
 
       for (var doc in incomesSnapshot.docs) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
@@ -141,6 +154,11 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
           date: (data['fecha'] as Timestamp).toDate(),
         );
         loadedIncomes.add(income);
+
+        // Calcular ingresos del mes actual
+        if (income.date.year == now.year && income.date.month == now.month) {
+          currentMonthIncomes += income.amount;
+        }
       }
 
       setState(() {
@@ -148,7 +166,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
         userExpenses.addAll(loadedExpenses);
         incomes.clear();
         incomes.addAll(loadedIncomes);
-        monthlyExpenses = totalExpenses;
+        monthlyExpenses = currentMonthExpenses; // Solo gastos del mes actual
+        monthlyIncomes = currentMonthIncomes;   // Solo ingresos del mes actual
         isLoading = false;
       });
 
@@ -353,7 +372,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     );
   }
 
-  void _handleAddExpense(Map<String, dynamic> expenseData) {
+  Future<void> _handleAddExpense(Map<String, dynamic> expenseData) async {
     final expense = Expense(
       category: expenseData['category'],
       amount: expenseData['amount'],
@@ -366,34 +385,49 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
     setState(() {
       userExpenses.insert(0, expense); // Agregar al inicio para mostrar los más recientes
-      monthlyExpenses += expense.amount;
       balance -= expense.amount;
 
       if (expense.amountSaved != null && expense.amountSaved! > 0) {
         savings += expense.amountSaved!;
       }
+
+      // Recalcular gastos del mes actual
+      final now = DateTime.now();
+      monthlyExpenses = userExpenses
+          .where((e) => e.date.year == now.year && e.date.month == now.month)
+          .fold<double>(0, (sum, e) => sum + e.amount);
     });
 
     _playSound("remove");
+
+    // Registrar actividad en el sistema de rachas
+    await _streakService.recordExpense(expense.amount, expense.description);
 
     // Forzar recarga de datos para asegurar persistencia
     _cargarDatosUsuario();
   }
 
-  void _handleAddIncome(Income income) {
+  Future<void> _handleAddIncome(Income income) async {
     setState(() {
       incomes.insert(0, income); // Agregar al inicio para mostrar los más recientes
       balance += income.amount;
+
+      // Recalcular ingresos del mes actual
+      final now = DateTime.now();
+      monthlyIncomes = incomes
+          .where((i) => i.date.year == now.year && i.date.month == now.month)
+          .fold<double>(0, (sum, i) => sum + i.amount);
     });
     _playSound("add");
+
+    // Registrar actividad en el sistema de rachas para ahorros diarios
+    await _streakService.recordDailySavings(income.amount);
 
     // Nota: Los datos ya fueron guardados en Firebase por el formulario,
     // no necesitamos recargar ya que causaría una condición de carrera
   }
 
-  Future<void> _handleDeleteExpense(int index) async {
-    final expense = userExpenses[index];
-
+  Future<void> _handleDeleteExpense(Expense expense) async {
     try {
       String uid = FirebaseAuth.instance.currentUser!.uid;
 
@@ -428,12 +462,22 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       }
 
       setState(() {
-        monthlyExpenses -= expense.amount;
         balance += expense.amount;
         if (expense.amountSaved != null && expense.amountSaved! > 0) {
           savings -= expense.amountSaved!;
         }
-        userExpenses.removeAt(index);
+        userExpenses.removeWhere((e) =>
+          e.category == expense.category &&
+          e.amount == expense.amount &&
+          e.description == expense.description &&
+          e.date == expense.date
+        );
+
+        // Recalcular gastos del mes actual
+        final now = DateTime.now();
+        monthlyExpenses = userExpenses
+            .where((e) => e.date.year == now.year && e.date.month == now.month)
+            .fold<double>(0, (sum, e) => sum + e.amount);
       });
 
       _playSound("remove");
@@ -448,9 +492,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     }
   }
 
-  Future<void> _handleDeleteIncome(int index) async {
-    final income = incomes[index];
-
+  Future<void> _handleDeleteIncome(Income income) async {
     try {
       String uid = FirebaseAuth.instance.currentUser!.uid;
 
@@ -484,7 +526,18 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
       setState(() {
         balance -= income.amount;
-        incomes.removeAt(index);
+        incomes.removeWhere((i) =>
+          i.source == income.source &&
+          i.amount == income.amount &&
+          i.description == income.description &&
+          i.date == income.date
+        );
+
+        // Recalcular ingresos del mes actual
+        final now = DateTime.now();
+        monthlyIncomes = incomes
+            .where((i) => i.date.year == now.year && i.date.month == now.month)
+            .fold<double>(0, (sum, i) => sum + i.amount);
       });
 
       _playSound("remove");
@@ -534,6 +587,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       setState(() {
         balance = 0;
         monthlyExpenses = 0;
+        monthlyIncomes = 0;
         savings = 0;
         userExpenses.clear();
         incomes.clear();
@@ -606,18 +660,20 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
 
 
   void _openFinancialChatbot() {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: FinancialChatbot(
-          expenses: userExpenses,
-          incomes: incomes,
-          balance: balance,
-          savings: savings,
+    UsageLimitsService.showChatWarningDialog(context, () {
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: FinancialChatbot(
+            expenses: userExpenses,
+            incomes: incomes,
+            balance: balance,
+            savings: savings,
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
 
@@ -1062,7 +1118,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                     style: TextStyle(color: Colors.white70, fontSize: 14),
                                   ),
                                   Text(
-                                    '\$${incomes.fold<double>(0, (sum, income) => sum + income.amount).toStringAsFixed(2)}',
+                                    '\$${monthlyIncomes.toStringAsFixed(2)}',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 28,
@@ -1070,7 +1126,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                     ),
                                   ),
                                   const Text(
-                                    'Total recibido',
+                                    'Este mes',
                                     style: TextStyle(color: Colors.white70, fontSize: 12),
                                   ),
                                 ],
@@ -1123,7 +1179,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                     ),
                                   ),
                                   const Text(
-                                    'Haz clic para ver detalles',
+                                    'Este mes',
                                     style: TextStyle(color: Colors.white70, fontSize: 12),
                                   ),
                                 ],
@@ -1205,8 +1261,6 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                       StreakTracker(hasActivityToday: _hasActivityToday()),
                       const SizedBox(height: 16),
                       const FinancialGoalsWidget(),
-                      const SizedBox(height: 16),
-                      WeeklyInsights(expenses: userExpenses, incomes: incomes),
                       const SizedBox(height: 16),
 
                       // Transaction History Tabs

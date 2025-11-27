@@ -6,7 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:google_generative_ai/google_generative_ai.dart';
-import 'smart_autocomplete.dart';
+import '../services/usage_limits_service.dart';
 
 class AddExpenseForm extends StatefulWidget {
   final Function(Map<String, dynamic>) onAddExpense;
@@ -38,7 +38,7 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
 
   // AI processing
   late GenerativeModel _model;
-  static const String _apiKey = 'AIzaSyA1tTTe2loIRAAUNnkYIIVhwP0TvTck_Ac';
+  static const String _apiKey = 'AIzaSyBxg6Ot1ZHCeXMnbHA8t9eVC9CL8aiJKWo';
 
   // Controllers for proper text field management
   late TextEditingController _descriptionController;
@@ -137,6 +137,10 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
   // Voice input functions
   Future<void> _listenForExpense() async {
     if (!_isListening) {
+      // Verificar límites de voz
+      final canUseVoice = await UsageLimitsService.canUseVoice(context);
+      if (!canUseVoice) return;
+
       bool available = await _speech.initialize(
         onStatus: (val) => print('onStatus: $val'),
         onError: (val) => print('onError: $val'),
@@ -157,7 +161,19 @@ class _AddExpenseFormState extends State<AddExpenseForm> {
       setState(() => _isListening = false);
       _speech.stop();
       if (_speechText.isNotEmpty) {
-        await _processVoiceInput(_speechText);
+        // Mostrar diálogo de confirmación para voz
+        UsageLimitsService.showVoiceValidationDialog(
+          context,
+          _speechText,
+          () async {
+            await UsageLimitsService.incrementVoiceUsage();
+            await _processVoiceInput(_speechText);
+          },
+          () {
+            // Limpiar texto y reiniciar
+            _speechText = '';
+          }
+        );
       }
     }
   }
@@ -743,13 +759,20 @@ Reglas:
                         controller: _amountController,
                         keyboardType: TextInputType.number,
                         onChanged: (value) => setState(() => amount = value),
-                        style: const TextStyle(fontSize: 18, color: Colors.black),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w500,
+                        ),
                         decoration: InputDecoration(
                           prefixText: '\$ ',
                           hintText: '0.00',
+                          hintStyle: TextStyle(color: Colors.grey.shade400),
+                          filled: true,
+                          fillColor: Colors.white,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(width: 2),
+                            borderSide: BorderSide(color: Colors.grey.shade300, width: 2),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -821,16 +844,28 @@ Reglas:
                         const SizedBox(height: 8),
                       ],
 
-                      SmartAutocomplete(
-                        hintText: '¿En qué gastaste? (Escribe o habla)',
-                        fieldType: 'description',
+                      TextFormField(
                         controller: _descriptionController,
-                        onSuggestionSelected: (suggestion) {
-                          setState(() {
-                            description = suggestion;
-                            _descriptionController.text = suggestion;
-                          });
-                        },
+                        onChanged: (value) => setState(() => description = value),
+                        maxLines: 3,
+                        style: const TextStyle(color: Colors.black),
+                        decoration: InputDecoration(
+                          hintText: '¿En qué gastaste? (Escribe o habla)',
+                          hintStyle: TextStyle(color: Colors.grey.shade400),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300, width: 2),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300, width: 2),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 2),
+                          ),
+                          contentPadding: const EdgeInsets.all(16),
+                        ),
                       ),
 
                       const SizedBox(height: 24),

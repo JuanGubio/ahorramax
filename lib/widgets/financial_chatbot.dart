@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../models.dart';
+import '../services/usage_limits_service.dart';
 
 class FinancialChatbot extends StatefulWidget {
   final List<Expense> expenses;
@@ -37,7 +38,10 @@ class _FinancialChatbotState extends State<FinancialChatbot> with TickerProvider
   String _speechText = '';
   double _confidence = 1.0;
 
-  static const String _apiKey = 'AIzaSyA1tTTe2loIRAAUNnkYIIVhwP0TvTck_Ac';
+  // Usage stats
+  Map<String, int> _usageStats = {};
+
+  static const String _apiKey = 'AIzaSyBxg6Ot1ZHCeXMnbHA8t9eVC9CL8aiJKWo';
 
   @override
   void initState() {
@@ -58,8 +62,16 @@ class _FinancialChatbotState extends State<FinancialChatbot> with TickerProvider
       apiKey: _apiKey,
     );
 
+    // Load usage stats
+    _loadUsageStats();
+
     // Welcome message with financial context
     _addBotMessage(_getWelcomeMessage());
+  }
+
+  Future<void> _loadUsageStats() async {
+    _usageStats = await UsageLimitsService.getUsageStats();
+    setState(() {});
   }
 
   @override
@@ -121,6 +133,16 @@ class _FinancialChatbotState extends State<FinancialChatbot> with TickerProvider
     final message = _messageController.text.trim();
     if (message.isEmpty) return;
 
+    // Verificar límites de uso
+    final canUse = await UsageLimitsService.canUseChat(context);
+    if (!canUse) return;
+
+    // Verificar si la pregunta es financieramente relevante
+    if (!UsageLimitsService.isQuestionFinanciallyRelevant(message)) {
+      _showIrrelevantQuestionDialog(message);
+      return;
+    }
+
     _addUserMessage(message);
     _messageController.clear();
 
@@ -128,6 +150,7 @@ class _FinancialChatbotState extends State<FinancialChatbot> with TickerProvider
 
     try {
       final response = await _getFinancialResponse(message);
+      await UsageLimitsService.incrementChatUsage();
       setState(() => _isTyping = false);
       _addBotMessage(response);
     } catch (e) {
@@ -135,6 +158,41 @@ class _FinancialChatbotState extends State<FinancialChatbot> with TickerProvider
       _addBotMessage('Lo siento, tuve un problema conectándome con la IA. ¿Puedes intentar de nuevo?');
       print('Error en chatbot financiero: $e');
     }
+  }
+
+  void _showIrrelevantQuestionDialog(String question) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Pregunta no relacionada con finanzas'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Tu pregunta no parece estar relacionada con finanzas personales.'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: const Text(
+                'Preguntas permitidas:\n• ¿Cuánto gasto al mes?\n• ¿Cómo ahorrar más?\n• ¿Cuál es mi balance?\n• Consejos de presupuesto\n• Análisis de gastos',
+                style: TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Entendido'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<String> _getFinancialResponse(String userMessage) async {
@@ -286,6 +344,10 @@ class _FinancialChatbotState extends State<FinancialChatbot> with TickerProvider
 
   void _listen() async {
     if (!_isListening) {
+      // Verificar límites de voz
+      final canUseVoice = await UsageLimitsService.canUseVoice(context);
+      if (!canUseVoice) return;
+
       bool available = await _speech.initialize(
         onStatus: (val) => print('onStatus: $val'),
         onError: (val) => print('onError: $val'),
@@ -309,7 +371,20 @@ class _FinancialChatbotState extends State<FinancialChatbot> with TickerProvider
       setState(() => _isListening = false);
       _speech.stop();
       if (_speechText.isNotEmpty) {
-        _sendMessage();
+        // Mostrar diálogo de confirmación para voz
+        UsageLimitsService.showVoiceValidationDialog(
+          context,
+          _speechText,
+          () async {
+            await UsageLimitsService.incrementVoiceUsage();
+            _sendMessage();
+          },
+          () {
+            // Limpiar texto y reiniciar
+            _speechText = '';
+            _messageController.clear();
+          }
+        );
       }
     }
   }
@@ -387,6 +462,22 @@ class _FinancialChatbotState extends State<FinancialChatbot> with TickerProvider
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                      // Usage indicator
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${_usageStats['chat_used'] ?? 0}/${_usageStats['chat_limit'] ?? 10}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       IconButton(

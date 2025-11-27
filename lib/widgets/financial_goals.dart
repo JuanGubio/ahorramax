@@ -242,6 +242,32 @@ class GoalCard extends StatelessWidget {
     return Colors.grey;
   }
 
+  Color _getPriorityColor(GoalPriority priority) {
+    switch (priority) {
+      case GoalPriority.low:
+        return Colors.grey;
+      case GoalPriority.medium:
+        return Colors.blue;
+      case GoalPriority.high:
+        return Colors.orange;
+      case GoalPriority.critical:
+        return Colors.red;
+    }
+  }
+
+  String _getPriorityShortText(GoalPriority priority) {
+    switch (priority) {
+      case GoalPriority.low:
+        return 'BAJA';
+      case GoalPriority.medium:
+        return 'MEDIA';
+      case GoalPriority.high:
+        return 'ALTA';
+      case GoalPriority.critical:
+        return 'CRÍTICA';
+    }
+  }
+
   String _getGoalTypeText(GoalType type) {
     switch (type) {
       case GoalType.savings:
@@ -435,6 +461,78 @@ class GoalCard extends StatelessWidget {
                 ),
               ),
             ],
+
+            // Información de asignación automática
+            if (goal.autoAssignEnabled) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.auto_awesome,
+                      color: Colors.green.shade600,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Asignación automática activa',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF388E3C),
+                            ),
+                          ),
+                          Text(
+                            goal.autoAssignIsPercentage
+                                ? '${(goal.autoAssignAmount * 100).toStringAsFixed(0)}% del excedente mensual'
+                                : '\$${goal.autoAssignAmount.toStringAsFixed(2)} mensuales',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.green.shade600,
+                            ),
+                          ),
+                          if (goal.totalAutoAssigned > 0) ...[
+                            Text(
+                              'Total auto-asignado: \$${goal.totalAutoAssigned.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.green.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: _getPriorityColor(goal.priority),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        _getPriorityShortText(goal.priority),
+                        style: const TextStyle(
+                          fontSize: 9,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -456,31 +554,47 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _targetAmountController = TextEditingController();
+  final _autoAssignAmountController = TextEditingController();
 
   GoalType _selectedType = GoalType.savings;
   GoalPeriod _selectedPeriod = GoalPeriod.monthly;
   DateTime? _targetDate;
+
+  // Nuevos campos para asignación automática
+  bool _autoAssignEnabled = false;
+  bool _autoAssignIsPercentage = false;
+  GoalPriority _selectedPriority = GoalPriority.medium;
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
     _targetAmountController.dispose();
+    _autoAssignAmountController.dispose();
     super.dispose();
   }
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
+      final targetAmount = double.parse(_targetAmountController.text.replaceAll(',', '.'));
+      final autoAssignAmount = _autoAssignEnabled && _autoAssignAmountController.text.isNotEmpty
+          ? double.parse(_autoAssignAmountController.text.replaceAll(',', '.'))
+          : 0.0;
+
       final goal = FinancialGoal(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         title: _titleController.text,
         description: _descriptionController.text,
-        targetAmount: double.parse(_targetAmountController.text.replaceAll(',', '.')),
+        targetAmount: targetAmount,
         currentAmount: 0,
         type: _selectedType,
         period: _selectedPeriod,
         createdDate: DateTime.now(),
         targetDate: _targetDate,
+        autoAssignEnabled: _autoAssignEnabled,
+        autoAssignAmount: _autoAssignIsPercentage ? autoAssignAmount / 100 : autoAssignAmount,
+        autoAssignIsPercentage: _autoAssignIsPercentage,
+        priority: _selectedPriority,
       );
 
       widget.onSave(goal);
@@ -494,15 +608,21 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 500),
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header fijo
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).dialogBackgroundColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+              ),
+              child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
@@ -524,7 +644,18 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+            ),
+
+            // Contenido scrollable
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
 
               TextFormField(
                 controller: _titleController,
@@ -641,30 +772,198 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
 
               const SizedBox(height: 24),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancelar'),
-                  ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: _submitForm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
+              // Sección de asignación automática
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.auto_awesome,
+                          color: Colors.blue.shade600,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Asignación Automática',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1565C0),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      '¿Quieres que el sistema asigne automáticamente dinero de tus ahorros a esta meta?',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF1976D2),
                       ),
                     ),
-                    child: const Text('Crear Meta'),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+
+                    // Switch para habilitar asignación automática
+                    SwitchListTile(
+                      title: const Text(
+                        'Habilitar asignación automática',
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                      subtitle: const Text(
+                        'El sistema transferirá dinero automáticamente cuando tengas excedentes',
+                      ),
+                      value: _autoAssignEnabled,
+                      onChanged: (value) => setState(() => _autoAssignEnabled = value),
+                      activeColor: Colors.blue,
+                    ),
+
+                    if (_autoAssignEnabled) ...[
+                      const SizedBox(height: 16),
+
+                      // Tipo de asignación (porcentaje o monto fijo)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: RadioListTile<bool>(
+                              title: const Text('Porcentaje'),
+                              subtitle: const Text('Del excedente mensual'),
+                              value: true,
+                              groupValue: _autoAssignIsPercentage,
+                              onChanged: (value) => setState(() => _autoAssignIsPercentage = value!),
+                            ),
+                          ),
+                          Expanded(
+                            child: RadioListTile<bool>(
+                              title: const Text('Monto fijo'),
+                              subtitle: const Text('Cantidad específica'),
+                              value: false,
+                              groupValue: _autoAssignIsPercentage,
+                              onChanged: (value) => setState(() => _autoAssignIsPercentage = value!),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Campo para el monto/porcentaje
+                      TextFormField(
+                        controller: _autoAssignAmountController,
+                        decoration: InputDecoration(
+                          labelText: _autoAssignIsPercentage ? 'Porcentaje (%)' : 'Monto mensual (\$)',
+                          hintText: _autoAssignIsPercentage ? 'Ej: 20' : 'Ej: 500.00',
+                          border: const OutlineInputBorder(),
+                          prefixText: _autoAssignIsPercentage ? null : '\$',
+                          suffixText: _autoAssignIsPercentage ? '%' : null,
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: _autoAssignEnabled ? (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Ingresa ${_autoAssignIsPercentage ? "un porcentaje" : "un monto"}';
+                          }
+                          final numValue = double.tryParse(value.replaceAll(',', '.'));
+                          if (numValue == null || numValue <= 0) {
+                            return 'Ingresa un valor válido mayor a 0';
+                          }
+                          if (_autoAssignIsPercentage && numValue > 100) {
+                            return 'El porcentaje no puede ser mayor a 100%';
+                          }
+                          return null;
+                        } : null,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Prioridad de la meta
+                      DropdownButtonFormField<GoalPriority>(
+                        value: _selectedPriority,
+                        decoration: const InputDecoration(
+                          labelText: 'Prioridad de asignación',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: GoalPriority.values.map((priority) {
+                          return DropdownMenuItem(
+                            value: priority,
+                            child: Text(_getGoalPriorityText(priority)),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() => _selectedPriority = value!);
+                        },
+                      ),
+
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: Colors.blue.shade700,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _autoAssignIsPercentage
+                                    ? 'Cada mes, el ${_autoAssignAmountController.text}% de tu excedente se asignará automáticamente a esta meta.'
+                                    : 'Cada mes, \$${(_autoAssignAmountController.text.isNotEmpty ? double.parse(_autoAssignAmountController.text.replaceAll(',', '.')) : 0).toStringAsFixed(2)} se transferirán automáticamente de tus ahorros.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.blue.shade700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            ],
-          ),
+
+                      const SizedBox(height: 24),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Cancelar'),
+                          ),
+                          const SizedBox(width: 16),
+                          ElevatedButton(
+                            onPressed: _submitForm,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                            ),
+                            child: const Text('Crear Meta'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -697,6 +996,19 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
         return 'Anual';
       case GoalPeriod.custom:
         return 'Personalizado';
+    }
+  }
+
+  String _getGoalPriorityText(GoalPriority priority) {
+    switch (priority) {
+      case GoalPriority.low:
+        return 'Baja - Última en recibir asignaciones';
+      case GoalPriority.medium:
+        return 'Media - Prioridad normal';
+      case GoalPriority.high:
+        return 'Alta - Recibe asignaciones primero';
+      case GoalPriority.critical:
+        return 'Crítica - Máxima prioridad';
     }
   }
 }

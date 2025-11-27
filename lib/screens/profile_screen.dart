@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../widgets/api_stats_widget.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? toggleTheme;
@@ -241,7 +242,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _signOut() async {
     await _auth.signOut();
     if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/login');
+      // Después del logout, ir al welcome screen donde se mostrarán las opciones de login/registro
+      Navigator.of(context).pushNamedAndRemoveUntil('/welcome', (route) => false);
     }
   }
 
@@ -892,6 +894,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           // TODO: Navigate to bank connection
                         },
                       ),
+
+                      const SizedBox(height: 24),
+
+                      // Estadísticas de API
+                      const ApiStatsWidget(),
 
                       const SizedBox(height: 24),
 

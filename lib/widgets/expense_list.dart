@@ -4,7 +4,7 @@ import '../models.dart';
 
 class ExpenseList extends StatelessWidget {
   final List<Expense> expenses;
-  final Function(int) onDeleteExpense;
+  final Function(Expense) onDeleteExpense;
 
   const ExpenseList({
     super.key,
@@ -172,7 +172,7 @@ class ExpenseList extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         IconButton(
-                          onPressed: () => _showDeleteDialog(context, index),
+                          onPressed: () => _showDeleteDialog(context, expense),
                           icon: const Icon(Icons.delete, color: Colors.red),
                           style: IconButton.styleFrom(
                             backgroundColor: Colors.red.shade50,
@@ -221,7 +221,7 @@ class ExpenseList extends StatelessWidget {
     );
   }
 
-  void _showDeleteDialog(BuildContext context, int index) {
+  void _showDeleteDialog(BuildContext context, Expense expense) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -238,7 +238,7 @@ class ExpenseList extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                onDeleteExpense(index);
+                onDeleteExpense(expense);
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(

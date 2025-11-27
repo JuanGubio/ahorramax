@@ -180,22 +180,36 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               TextFormField(
                 controller: _loginEmailController,
                 keyboardType: TextInputType.emailAddress,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  decorationColor: Colors.black,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Correo electrónico',
+                  labelStyle: const TextStyle(color: Colors.black87),
                   prefixIcon: const Icon(Icons.email, color: Colors.grey),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey.shade50,
+                  fillColor: Colors.white,
                 ),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _loginPasswordController,
                 obscureText: _loginObscurePassword,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  decorationColor: Colors.black,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Contraseña',
+                  labelStyle: const TextStyle(color: Colors.black87),
                   prefixIcon: const Icon(Icons.lock, color: Colors.grey),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -210,7 +224,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey.shade50,
+                  fillColor: Colors.white,
                 ),
               ),
               const SizedBox(height: 24),
@@ -268,36 +282,57 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _registerNameController,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    decorationColor: Colors.black,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Nombre completo',
+                    labelStyle: const TextStyle(color: Colors.black87),
                     prefixIcon: const Icon(Icons.person, color: Colors.grey),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     filled: true,
-                    fillColor: Colors.grey.shade50,
+                    fillColor: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _registerEmailController,
                   keyboardType: TextInputType.emailAddress,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    decorationColor: Colors.black,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Correo electrónico',
+                    labelStyle: const TextStyle(color: Colors.black87),
                     prefixIcon: const Icon(Icons.email, color: Colors.grey),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     filled: true,
-                    fillColor: Colors.grey.shade50,
+                    fillColor: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _registerPasswordController,
                   obscureText: _registerObscurePassword,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    decorationColor: Colors.black,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Contraseña',
+                    labelStyle: const TextStyle(color: Colors.black87),
                     prefixIcon: const Icon(Icons.lock, color: Colors.grey),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -312,15 +347,22 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     filled: true,
-                    fillColor: Colors.grey.shade50,
+                    fillColor: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _registerConfirmPasswordController,
                   obscureText: _registerObscureConfirmPassword,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    decorationColor: Colors.black,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Confirmar contraseña',
+                    labelStyle: const TextStyle(color: Colors.black87),
                     prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -335,7 +377,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     filled: true,
-                    fillColor: Colors.grey.shade50,
+                    fillColor: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -455,7 +497,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   'Tu asistente financiero inteligente',
                   style: TextStyle(
                     fontSize: 18,
-                    color: Color(0xFF6B7280),
+                    color: Colors.black87,
                     fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
